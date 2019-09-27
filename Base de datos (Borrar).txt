@@ -1,0 +1,1021 @@
+DROP DATABASE edicat_Plataforma;
+CREATE DATABASE edicat_Plataforma;
+USE edicat_Plataforma;
+
+/*Tabla usuarios*/
+CREATE TABLE Usuarios(
+    Codigo int auto_increment primary key, 
+    Usuario varchar(30) not null unique key,
+    Pass varchar(100) not null, 
+    Salt varchar(100) not null, 
+    Nombre varchar(50) not null,
+    TipoDocumento int not null, 
+    Documento varchar(15) not null, 
+    Perfil int not null, 
+    Administrador int not null, 
+    Estado int not null, 
+    CambioPass smallint default 0, 
+    Habilitado smallint default 1, 
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=101;
+
+/*Tabla Tipo de Documentos*/
+CREATE TABLE TiposDocumentos(
+    Codigo int auto_increment primary key, 
+    Nombre varchar(50) not null,
+    Nemonico varchar(5) not null unique key,    
+    Habilitado smallint default 1, 
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=101;
+
+ALTER TABLE Usuarios ADD CONSTRAINT FK_TipDoc_Usu FOREIGN KEY (TipoDocumento)
+REFERENCES TiposDocumentos(Codigo);
+
+/*Tabla Estados*/
+CREATE TABLE Estados(
+    Codigo int auto_increment primary key, 
+    Nombre varchar(50) not null,
+    TipoEstado int not null, 
+    Habilitado smallint default 1, 
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=101;
+
+ALTER TABLE Usuarios ADD CONSTRAINT FK_Est_Usu FOREIGN KEY (Estado)
+REFERENCES Estados(Codigo);
+
+/*Tabla Tipos de Estados*/
+CREATE TABLE TiposEstados(
+    Codigo int auto_increment primary key, 
+    Nombre varchar(50) not null,
+    Habilitado smallint default 1, 
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=101;
+
+ALTER TABLE Estados ADD CONSTRAINT FK_TipEst_Est FOREIGN KEY (TipoEstado)
+REFERENCES TiposEstados(Codigo);
+
+/*Tabla Perfiles*/
+CREATE TABLE Perfiles(
+    Codigo int auto_increment primary key, 
+    Nombre varchar(50) not null,
+    Habilitado smallint default 1, 
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=101;
+
+ALTER TABLE Usuarios ADD CONSTRAINT FK_Per_Usu FOREIGN KEY (Perfil)
+REFERENCES Perfiles(Codigo);
+
+/*Tabla Administradores*/
+CREATE TABLE Administradores(
+    Codigo int auto_increment primary key, 
+    Nombre varchar(50) not null,    
+    Direccion varchar(30) not null,
+    Telefono1 varchar(10) not null,
+    Telefono2 varchar(10) null,
+    Telefono3 varchar(10) null,
+    Cargo varchar(20) not null,
+    Habilitado smallint default 1, 
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=101;
+
+ALTER TABLE Usuarios ADD CONSTRAINT FK_Adm_Usu FOREIGN KEY (Administrador)
+REFERENCES Administradores(Codigo);
+
+/*Tabla Permisos*/
+CREATE TABLE Permisos(
+    Codigo int auto_increment primary key, 
+    Nombre varchar(50) not null,
+    Tipo int not null, 
+    Controlador varchar(50) not null, 
+    Habilitado smallint default 1, 
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=101;
+
+/*Tabla Tipos de Permisos*/
+CREATE TABLE TiposPermisos(
+    Codigo int auto_increment primary key, 
+    Nombre varchar(50) not null,
+    Habilitado smallint default 1, 
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=101;
+
+ALTER TABLE Permisos ADD CONSTRAINT FK_TipPer_Per FOREIGN KEY (Tipo)
+REFERENCES TiposPermisos(Codigo);
+
+/*Tabla PermisosUsuarios*/
+CREATE TABLE PermisosUsuarios(
+    Codigo int auto_increment primary key, 
+    Permiso int not null, 
+    Usuario int not null, 
+    Habilitado smallint default 1, 
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=101;
+
+ALTER TABLE PermisosUsuarios ADD CONSTRAINT FK_Per_PerUsu FOREIGN KEY (Permiso)
+REFERENCES Permisos(Codigo);
+
+ALTER TABLE PermisosUsuarios ADD CONSTRAINT FK_Usu_PerUsu FOREIGN KEY (Usuario)
+REFERENCES Usuarios(Codigo);
+
+/*Tabla Clientes*/
+CREATE TABLE Clientes(
+    Codigo int auto_increment primary key, 
+    Nombre varchar(50) not null,
+    TipoDocumento int not null, 
+    Documento varchar(15) not null, /*unique key,*/ 
+    Direccion int not null,
+    Telefono1 varchar(10) not null,
+    Telefono2 varchar(10) null,
+    Telefono3 varchar(10) null,
+    Estado int not null, 
+    Observaciones varchar(5000) null,
+    Habilitado smallint default 1, 
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30) null,
+    FechaModificacion datetime null
+) ENGINE=InnoDB AUTO_INCREMENT=1001;
+
+ALTER TABLE Clientes ADD CONSTRAINT FK_TipDoc_Cli FOREIGN KEY (TipoDocumento)
+REFERENCES TiposDocumentos(Codigo);
+
+ALTER TABLE Clientes ADD CONSTRAINT FK_Est_Cli FOREIGN KEY (Estado)
+REFERENCES Estados(Codigo);
+
+/*Tabla Direcciones*/
+CREATE TABLE Direcciones(
+    Codigo int auto_increment primary key, 
+    Direccion varchar(150) not null,
+    Etapa varchar(10) not null,
+    Torre varchar(10) not null,
+    Apartamento varchar(10) not null,
+    Manzana varchar(10) not null,
+    Interior varchar(10) not null,
+    Casa varchar(10) not null,
+    Barrio varchar(30) not null,
+    TipoVivienda int not null,
+    Habilitado smallint default 1, 
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=101;
+
+ALTER TABLE Clientes ADD CONSTRAINT FK_Dir_Cli FOREIGN KEY (Direccion)
+REFERENCES Direcciones(Codigo);
+
+/*Tipos de Viviendas*/
+CREATE TABLE TiposViviendas(
+    Codigo int auto_increment primary key, 
+    Nombre varchar(50) not null,    
+    Habilitado smallint default 1, 
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=101;
+
+ALTER TABLE Direcciones ADD CONSTRAINT FK_TipViv_Dir FOREIGN KEY (TipoVivienda)
+REFERENCES TiposViviendas(Codigo);
+
+/*Tabla Referencias*/
+CREATE TABLE Referencias(
+    Codigo int auto_increment primary key, 
+    Nombres varchar(50) not null,    
+    Telefono varchar(30) not null,    
+    Parentesco varchar(20) not null,    
+    Habilitado smallint default 1, 
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=101;
+
+/*Tabla de ReferenciasCliente*/
+CREATE TABLE ReferenciasCliente(
+    Codigo int auto_increment primary key, 
+    Cliente int not null,
+    Referencia int not null,
+    Habilitado smallint default 1, 
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=101;
+
+ALTER TABLE ReferenciasCliente ADD CONSTRAINT FK_Cli_RefCli FOREIGN KEY (Cliente)
+REFERENCES Clientes(Codigo);
+
+ALTER TABLE ReferenciasCliente ADD CONSTRAINT FK_Ref_RefCli FOREIGN KEY (Referencia)
+REFERENCES Referencias(Codigo);
+
+/*Tabla Productos*/
+CREATE TABLE Productos(
+    Codigo int auto_increment primary key, 
+    Nombre varchar(50) not null, 
+	Valor int not null,
+    Habilitado smallint default 1, 
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=101;
+
+/*Tabla Pedidos*/
+CREATE TABLE Pedidos(
+    Codigo int auto_increment primary key, 
+    Cliente int not null,    
+    Valor int not null,
+    Tarifa int null, 
+    DiaCobro datetime null,
+    Estado int not null,  
+    Evento int not null,
+    Vendedor int not null,
+    FechaPedido datetime not null,
+    Saldo int null,
+    FechaUltimoPago datetime,
+    PaginaFisica varchar(20) not null,
+    Observaciones varchar(5000) null,
+    Habilitado smallint default 1, 
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=1001;
+
+ALTER TABLE Pedidos ADD CONSTRAINT FK_Cli_Ped FOREIGN KEY (Cliente)
+REFERENCES Clientes(Codigo);
+
+ALTER TABLE Pedidos ADD CONSTRAINT FK_Est_Ped FOREIGN KEY (Estado)
+REFERENCES Estados(Codigo);
+
+/*Tabla ProductoPedido*/
+CREATE TABLE ProductosPedidos(
+    Codigo int auto_increment primary key, 
+    Pedido int not null, 
+    Cantidad int not null,
+    Producto int not null,
+    Valor int not null,
+    Habilitado smallint default 1, 
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=101;
+
+ALTER TABLE ProductosPedidos ADD CONSTRAINT FK_Ped_ProPed FOREIGN KEY (Pedido)
+REFERENCES Pedidos(Codigo);
+
+ALTER TABLE ProductosPedidos ADD CONSTRAINT FK_Pro_ProPed FOREIGN KEY (Producto)
+REFERENCES Productos(Codigo);
+
+/*Tabla Conceptos* /
+CREATE TABLE Conceptos(
+    Codigo int auto_increment primary key, 
+    Nombre varchar(50) not null,
+    Habilitado smallint default 1, 
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=101;
+
+ALTER TABLE ProductosPedidos ADD CONSTRAINT FK_Concep_ProPed FOREIGN KEY (Concepto)
+REFERENCES Conceptos(Codigo);*/
+
+/*Tabla Tarifas*/
+CREATE TABLE Tarifas(
+    Codigo int auto_increment primary key, 
+    Nombre varchar(50) not null, 
+    Producto int not null, 
+    Valor int not null, 
+    Cuotas int not null, 
+    ValorCuota int not null, 
+	Descuento int not null,
+	Habilitado smallint default 1, 
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=101;
+
+ALTER TABLE Tarifas ADD CONSTRAINT FK_Pro_Tar FOREIGN KEY (Producto)
+REFERENCES Productos(Codigo);
+
+
+ALTER TABLE Pedidos ADD CONSTRAINT FK_Tar_Ped FOREIGN KEY (Tarifa)
+REFERENCES Tarifas(Codigo);
+
+CREATE TABLE Vendedores(
+    Codigo int auto_increment primary key, 
+    Usuario varchar(30) not null, 
+    Nombre varchar(50) not null, 
+    Estado int not null,
+    Habilitado smallint default 1, 
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=101;
+
+ALTER TABLE Pedidos ADD CONSTRAINT FK_Ven_Ped FOREIGN KEY (Vendedor)
+REFERENCES Vendedores(Codigo);
+
+ALTER TABLE Vendedores ADD CONSTRAINT FK_Est_Ven FOREIGN KEY (Estado)
+REFERENCES Estados(Codigo);
+
+CREATE TABLE Eventos(
+    Codigo int auto_increment primary key, 
+    Vendedor int not null, 
+    Iglesia varchar(50) not null,
+    Barrio varchar(50) not null, 
+    Fecha datetime not null,
+    Habilitado smallint default 1, 
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=101;
+
+ALTER TABLE Pedidos ADD CONSTRAINT FK_Eve_Ped FOREIGN KEY (Evento)
+REFERENCES Eventos(Codigo);
+
+ALTER TABLE Eventos ADD CONSTRAINT FK_Ven_Eve FOREIGN KEY (Vendedor)
+REFERENCES Vendedores(Codigo);
+
+/*Tabla Pagos*/
+CREATE TABLE Pagos(
+    Codigo int auto_increment primary key, 
+    Cliente int not null,
+    Pedido int not null, 
+    Cuota int not null,
+    Pago int not null,
+    Confirmacion int null,
+    FechaPago datetime not null,
+    TotalPago int not null,
+    Cobrador int null, 
+    Observaciones varchar(5000) null,
+    Habilitado smallint default 1, 
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=1001;
+
+ALTER TABLE Pagos ADD CONSTRAINT FK_Cli_Pag FOREIGN KEY (Cliente)
+REFERENCES Clientes(Codigo);
+
+ALTER TABLE Pagos ADD CONSTRAINT FK_Ped_Pag FOREIGN KEY (Pedido)
+REFERENCES Pedidos(Codigo);
+
+/*Tabla Confirmación de Pagos*/
+CREATE TABLE PagosProgramados(
+    Codigo int auto_increment primary key, 
+    Pedido int not null, 
+    Cuota int not null, 
+    FechaProgramada datetime not null,
+    Estado int not null,
+    Copias int not null default 0,
+    FechaImpresion datetime null,
+    Observaciones varchar(5000) null,
+    Habilitado smallint default 1, 
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=101;
+
+ALTER TABLE Pagos ADD CONSTRAINT FK_PagProg_Pag FOREIGN KEY (Confirmacion)
+REFERENCES PagosProgramados(Codigo);
+
+ALTER TABLE PagosProgramados ADD CONSTRAINT FK_Ped_PagProg FOREIGN KEY (Pedido)
+REFERENCES Pedidos(Codigo);
+
+ALTER TABLE PagosProgramados ADD CONSTRAINT FK_Est_PagProg FOREIGN KEY (Estado)
+REFERENCES Estados(Codigo);
+
+
+/*Tabla Historial Pagos*/
+CREATE TABLE HistorialPagos(
+    Codigo int auto_increment primary key, 
+    Pedido int not null,
+    Cliente int not null,
+    FechaHistorial datetime not null,
+    Accion varchar(50) not null,
+    SaldoAnterior int not null,
+    Cuota int not null,
+    Abono int not null,
+    SaldoNuevo int not null,
+   	Observaciones varchar(5000) null,
+   	UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=1001;
+
+
+ALTER TABLE HistorialPagos ADD CONSTRAINT FK_Ped_HisPag FOREIGN KEY (Pedido)
+REFERENCES Pedidos(Codigo);
+
+ALTER TABLE HistorialPagos ADD CONSTRAINT FK_Cli_HisPag FOREIGN KEY (Cliente)
+REFERENCES Clientes(Codigo);
+
+/*Tabla de Cobradores*/
+CREATE TABLE Cobradores(
+    Codigo int auto_increment primary key, 
+    Nombre varchar(50) not null,
+    TipoDocumento int not null, 
+    Documento varchar(15) not null, 
+    Direccion varchar(150) not null,
+    Telefono1 varchar(10) not null,
+    Telefono2 varchar(10) null,
+    Correo varchar(100) null,
+    Estado int not null, 
+    Habilitado smallint default 1, 
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=101;
+
+ALTER TABLE Cobradores ADD CONSTRAINT FK_Est_Cobr FOREIGN KEY (Estado)
+REFERENCES Estados(Codigo);
+
+ALTER TABLE Cobradores ADD CONSTRAINT FK_TipDoc_Cobr FOREIGN KEY (TipoDocumento)
+REFERENCES TiposDocumentos(Codigo);
+
+ALTER TABLE Pagos ADD CONSTRAINT FK_Cobr_Pag FOREIGN KEY (Cobrador)
+REFERENCES Cobradores(Codigo);
+
+/*Tabla Devoluciones*/
+CREATE TABLE Devoluciones(
+    Codigo int auto_increment primary key, 
+    Pedido int not null,  
+    Cliente int not null, 
+    Saldo int not null, 
+    Cuota int not null, 
+    ValorDevol int not null,
+    Cobrador int not null,
+    Observaciones varchar(5000) null,
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=101;
+
+ALTER TABLE Devoluciones ADD CONSTRAINT FK_Ped_Devol FOREIGN KEY (Pedido)
+REFERENCES Pedidos(Codigo);
+
+ALTER TABLE Devoluciones ADD CONSTRAINT FK_Cli_Devol FOREIGN KEY (Cliente)
+REFERENCES Clientes(Codigo);
+
+ALTER TABLE Devoluciones ADD CONSTRAINT FK_Cob_Devol FOREIGN KEY (Cobrador)
+REFERENCES Cobradores(Codigo);
+
+/*Tabla Validación Deuda*/
+CREATE TABLE ValidacionDeudas(
+    Codigo int auto_increment primary key, 
+    Pedido int not null, 
+    Cliente int not null, 
+    FechaValidacion datetime not null,
+    Dias int not null, 
+    Estado varchar(50) not null,
+    Observaciones varchar(5000) null,
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=101;
+
+ALTER TABLE ValidacionDeudas ADD CONSTRAINT FK_Ped_ValDeu FOREIGN KEY (Pedido)
+REFERENCES Pedidos(Codigo);
+
+ALTER TABLE ValidacionDeudas ADD CONSTRAINT FK_Cli_ValDeu FOREIGN KEY (Cliente)
+REFERENCES Clientes(Codigo);
+
+/*Tabla Motivos de Llamadas*/
+CREATE TABLE MotivosLlamadas(
+    Codigo int auto_increment primary key, 
+    Nombre varchar(30) not null,
+    Color varchar(30) not null,
+    Habilitado smallint default 1, 
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=101;
+
+/*Tabla Llamadas*/
+CREATE TABLE Llamadas(
+    Codigo int auto_increment primary key, 
+    Pedido int not null, 
+    Cliente int not null, 
+    Fecha datetime not null,
+    Motivo int not null,
+    FechaProgramada datetime null,
+    Devolucion int default '0',
+    Observaciones varchar(5000) null,
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=1001;
+
+ALTER TABLE Llamadas ADD CONSTRAINT FK_Ped_Llam FOREIGN KEY (Pedido)
+REFERENCES Pedidos(Codigo);
+
+ALTER TABLE Llamadas ADD CONSTRAINT FK_Cli_Llam FOREIGN KEY (Cliente)
+REFERENCES Clientes(Codigo);
+
+ALTER TABLE Llamadas ADD CONSTRAINT FK_MotLLam_Llam FOREIGN KEY (Motivo)
+REFERENCES MotivosLlamadas(Codigo);
+
+ALTER TABLE Llamadas ADD CONSTRAINT FK_MotLLamPro_Llam FOREIGN KEY (Motivo)
+REFERENCES MotivosLlamadas(Codigo);
+
+
+/*Tabla devolver Llamadas*/
+CREATE TABLE DevolucionLlamadas(
+    Codigo int auto_increment primary key, 
+    Pedido int not null, 
+    Cliente int not null, 
+    Fecha datetime not null,
+    Motivo int null,
+    FechaProgramada datetime null,
+    Devolucion int default '0',
+    Observaciones varchar(5000) null,
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=1001;
+
+ALTER TABLE DevolucionLlamadas ADD CONSTRAINT FK_Ped_DevLlam FOREIGN KEY (Pedido)
+REFERENCES Pedidos(Codigo);
+
+ALTER TABLE DevolucionLlamadas ADD CONSTRAINT FK_Cli_DevLlam FOREIGN KEY (Cliente)
+REFERENCES Clientes(Codigo);
+
+ALTER TABLE DevolucionLlamadas ADD CONSTRAINT FK_MotLLam_DevLlam FOREIGN KEY (Motivo)
+REFERENCES MotivosLlamadas(Codigo);
+
+ALTER TABLE DevolucionLlamadas ADD CONSTRAINT FK_MotLLamPro_DevLlam FOREIGN KEY (Motivo)
+REFERENCES MotivosLlamadas(Codigo);
+
+/*Tabla ClientesUsuario*/
+CREATE TABLE ClientesUsuarios(
+    Codigo int auto_increment primary key, 
+    Usuario int not null, 
+    Cliente int not null, 
+    Habilitado smallint default 1, 
+    UsuarioCreacion varchar(30) not null default 'ADMIN',
+    FechaCreacion datetime not null,
+    UsuarioModificacion varchar(30),
+    FechaModificacion datetime
+) ENGINE=InnoDB AUTO_INCREMENT=1001; 
+
+ALTER TABLE ClientesUsuarios ADD CONSTRAINT FK_Usu_CliUsu FOREIGN KEY (Usuario)
+REFERENCES Usuarios(Codigo);
+
+ALTER TABLE ClientesUsuarios ADD CONSTRAINT FK_Cli_CliUsu FOREIGN KEY (Cliente)
+REFERENCES Clientes(Codigo);
+
+
+/*Tabla Log de Usuarios*/
+CREATE TABLE Log(
+    Codigo int auto_increment primary key, 
+    Modulo varchar(250) not null,
+    Accion varchar(250) not null,
+    Tabla varchar(50) not null,
+    Llave int not null, 
+    Cliente int not null, 
+    Enlace varchar(250) null,
+    Action varchar(50) not null,
+    Creacion varchar(10000) null,
+    Lectura varchar(10000) null,
+    Actualizacion varchar(10000) null,
+    Eliminacion varchar(10000) null,
+	Observaciones varchar(10000) null,
+    Usuario int not null, 
+    NombreUsuario varchar(30) not null,
+    Fecha datetime not null
+) ENGINE=InnoDB AUTO_INCREMENT=1001;
+
+ALTER TABLE Log ADD CONSTRAINT FK_Usu_Log FOREIGN KEY (Usuario)
+REFERENCES Usuarios(Codigo);
+
+
+
+
+/*////////////////////////////////////////////////////////////*/
+/*Registros*/
+/*Tipos Documentos*/
+INSERT INTO `TiposDocumentos` 
+(`Codigo`, `Nombre`, `Nemonico`, `Habilitado`, `UsuarioCreacion`, `FechaCreacion`, `UsuarioModificacion`, `FechaModificacion`) 
+VALUES 
+(NULL, 'Cédula de Ciudadanía', 'CC', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL), 
+(NULL, 'Cédula de Extranjería', 'CE', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL), 
+(NULL, 'Pasaporte', 'PP', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL), 
+(NULL, 'Nit', 'NIT', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL);
+
+/*Perfiles*/
+INSERT INTO `Perfiles` 
+(`Codigo`, `Nombre`, `Habilitado`, `UsuarioCreacion`, `FechaCreacion`, `UsuarioModificacion`, `FechaModificacion`) 
+VALUES 
+(100, 'Desarrollador', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Administrador', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Coordinador', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Auxiliar', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL);
+
+/*Tipos de Estado*/
+INSERT INTO `TiposEstados` 
+(`Codigo`, `Nombre`, `Habilitado`, `UsuarioCreacion`, `FechaCreacion`, `UsuarioModificacion`, `FechaModificacion`) 
+VALUES 
+(NULL, 'Usuarios', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Clientes', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Vendedores', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Pedidos', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'PagosProgramados', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Cobradores', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL);
+
+/*Estados*/
+INSERT INTO `Estados` 
+(`Codigo`, `Nombre`, `TipoEstado`, `Habilitado`, `UsuarioCreacion`, `FechaCreacion`, `UsuarioModificacion`, `FechaModificacion`) 
+VALUES 
+(NULL, 'Activo', '101', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Inactivo', '101', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL), 
+(NULL, 'Bloqueado', '101', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Al día', '102', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Debe', '102', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Devolución', '102', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Activo', '103', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Vacaciones', '103', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Inactivo', '103', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Sin Pago', '104', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Al día', '104', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Deuda', '104', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Devolución', '104', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Paz y Salvo', '104', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'DataCredito', '102', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Programado', '105', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Pagado', '105', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'No Pagado', '105', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'En Operación', '106', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Inactivo', '106', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Bloqueado', '106', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Descartado', '105', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Paz y Salvo', '102', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'En Mora', '102', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'DataCredito', '104', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Reportado', '102', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Reportado', '104', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL);
+
+/*Tipos de Permisos*/
+INSERT INTO `TiposPermisos`
+(`Codigo`, `Nombre`, `Habilitado`, `UsuarioCreacion`, `FechaCreacion`, `UsuarioModificacion`, `FechaModificacion`) 
+VALUES
+(NULL, 'Página', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Acción', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Botón', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Menú', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL);
+
+/*Tipos de Vivienda*/
+INSERT INTO `TiposViviendas` 
+(`Codigo`, `Nombre`, `Habilitado`, `UsuarioCreacion`, `FechaCreacion`, `UsuarioModificacion`, `FechaModificacion`) 
+VALUES 
+(NULL, 'Propia', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL), 
+(NULL, 'Familiar', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Arriendo', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL);
+
+/*Motivos de Llamadas*/
+INSERT INTO 
+`MotivosLlamadas` 
+(`Codigo`, `Nombre`, `Color`, `Habilitado`, `UsuarioCreacion`, `FechaCreacion`, `UsuarioModificacion`, `FechaModificacion`) 
+VALUES 
+(100, 'Pendiente', '', '0', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Programar Pago', 'green', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Cliente no Paga', 'red', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Llamar más tarde', 'orange', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Llamar otro día', 'black', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL); 
+
+/*Listado de Permisos*/
+INSERT INTO 
+`Permisos` 
+(`Codigo`, `Nombre`, `Tipo`, `Controlador`, `Habilitado`, `UsuarioCreacion`, `FechaCreacion`, `UsuarioModificacion`, `FechaModificacion`) 
+VALUES
+(NULL, 'Lista Usuarios', '101', 'Usuarios', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Crear Usuario', '101', 'Usuarios', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Consultar Usuario', '101', 'Usuarios', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Resetear Contraseña', '101', 'Usuarios', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Log Usuario', '101', 'Log', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Eliminar Usuario', '101', 'Usuarios', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Lista Usuarios Eliminados', '101', 'Usuarios', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Lista Permisos', '101', 'Permisos', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Permisos Por Usuarios', '101', 'Permisos', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Asignar Permiso', '101', 'Permisos', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Lista Clientes', '101', 'Clientes', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Cliente Al día', '101', 'Clientes', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Clientes Morosos', '101', 'Clientes', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Clientes Datacredito', '101', 'Clientes', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Consultar Cliente', '101', 'Clientes', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Cambio Fecha Cobro Cliente', '101', 'Clientes', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Cambio Tarifa Cliente', '101', 'Clientes', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Lista Pagos Programados ', '101', 'Pagos', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Crear Pago Programado', '101', 'Pagos', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Consultar Pago Programado', '101', 'Pagos', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Confirmar Pago Programado', '101', 'Pagos', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Descartar Pago Programado', '101', 'Pagos', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Lista Pagos', '101', 'Pagos', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Consultar Pago', '101', 'Pagos', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Historial Pagos', '101', 'Pagos', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Log Cliente', '101', 'Log', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Llamadas del Día', '101', 'Pagos', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'GestionHoy', '101', 'Cobradores', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Volver a Llamar', '101', 'Cobradores', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'GestionDía', '101', 'Cobradores', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Visitas Programadas', '101', 'Pagos', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Imprimir Recibos', '101', 'Pagos', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Pagos Confirmados ', '101', 'Pagos', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Reversar Pagos', '101', 'Pagos', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Listado Devoluciones', '101', 'Pagos', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Reporte Contador Clientes ', '101', 'Clientes', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Reporte Contador Pagos', '101', 'Pagos', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Reporte Cartera Por Usuario', '101', 'Reportes', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Reporte Cartera Por Cobrador', '101', 'Reportes', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Reporte Cartera Por Día', '101', 'Reportes', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Reporte Clientes última Cuota', '101', 'Reportes', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Reporte Ventas (Reversar)', '101', 'Reportes', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Reporte Estadistica 1', '101', 'Reportes', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Reporte Estadistica 2', '101', 'Reportes', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Reporte Cartera Bruta y Neta', '101', 'Reportes', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Lista Productos', '101', 'Productos', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Crear Producto', '101', 'Productos', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Consultar Producto', '101', 'Productos', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Lista Tarifas', '101', 'Tarifas', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Crear Tarifa', '101', 'Tarifas', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Consultar Tarifa', '101', 'Tarifas', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Lista Cobradores', '101', 'Cobradores', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Crear Cobrador', '101', 'Cobradores', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Editar Cobrador', '101', 'Cobradores', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Lista Vendedores', '101', 'Vendedores', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Crear Vendedores', '101', 'Vendedores', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Editar Vendedores', '101', 'Vendedores', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+
+(990099, 'Subida Archivos', '101', 'Importar', '0', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL);
+ 
+
+
+
+
+/*////////////////////////////////////////////////////////////*/
+/*////////////////////////////////////////////////////////////*/
+/*////////////////////////////////////////////////////////////*/
+
+
+/*Datos Base de Datos*/
+/*Administradores*/
+INSERT INTO `Administradores` 
+(`Codigo`, `Nombre`, `Direccion`, `Telefono1`, `Telefono2`, `Telefono3`, `Cargo`, `Habilitado`, `UsuarioCreacion`, `FechaCreacion`, `UsuarioModificacion`, `FechaModificacion`) 
+VALUES 
+(100, 'Jhonatan Guerrero', 'Cr 88 C 74-26 Sur', '3138227185', '5700426', NULL, 'Desarrollador', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'José Florez', 'Cr 97 C 71-30 Sur', '3142995231', '3115994139', '3108844818', 'Coordinador', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Nelson Florez', 'Cr 97 C 71-30 Sur', '3143330222', '3212106034', '4294271', 'Coordinador', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL);
+
+
+/*Usuarios*/
+INSERT INTO `Usuarios` 
+(`Codigo`, `Usuario`, `Pass`, `Salt`, `Nombre`, `TipoDocumento`, `Documento`, `Perfil`, `Administrador`, `Estado`, `CambioPass`, `Habilitado`, `UsuarioCreacion`, `FechaCreacion`, `UsuarioModificacion`, `FechaModificacion`) 
+VALUES 
+('100', 'Desarrollador', '$2y$10$9g/9ajCbElCnpDYhuFqX7uK98q7VdyED4xQ7kslYfBPIVDUk3GyFe', '$2y$10$9g/9ajCbElCnpDYhuFqX7u3.rS/pxw==$', 'Jhonatan Guerrero', '101', '1024526544', '100', '100', '101', '0', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL), 
+(NULL, 'Administrador1', '$2y$10$TWeYjvjYwjNSHR7G808NIOat9VAvNx/c.h2J.xEW.uwjTgD6alNG2', '$2y$10$TWeYjvjYwjNSHR7G808NITPTazOaxg==$', 'José Florez', '101', '1234567890', '101', '101', '101', '0', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL), /* Ediciones123 */
+
+
+/*****************************************************************************/
+(NULL, 'Daniela', '$2y$10$TWeYjvjYwjNSHR7G808NIOat9VAvNx/c.h2J.xEW.uwjTgD6alNG2', '$2y$10$TWeYjvjYwjNSHR7G808NITPTazOaxg==$', 'Daniela Lopez', '101', '1234567890', '102', '101', '101', '0', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL), 
+(NULL, 'Teresa', '$2y$10$TWeYjvjYwjNSHR7G808NIOat9VAvNx/c.h2J.xEW.uwjTgD6alNG2', '$2y$10$TWeYjvjYwjNSHR7G808NITPTazOaxg==$', 'Maria Teresa', '101', '1234567890', '103', '101', '101', '0', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL), 
+(NULL, 'Fernanda', '$2y$10$TWeYjvjYwjNSHR7G808NIOat9VAvNx/c.h2J.xEW.uwjTgD6alNG2', '$2y$10$TWeYjvjYwjNSHR7G808NITPTazOaxg==$', 'Fernanda Lopez', '101', '1234567890', '101', '101', '101', '0', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL), 
+(NULL, 'Laura', '$2y$10$TWeYjvjYwjNSHR7G808NIOat9VAvNx/c.h2J.xEW.uwjTgD6alNG2', '$2y$10$TWeYjvjYwjNSHR7G808NITPTazOaxg==$', 'Laura Diaz', '101', '1234567890', '103', '101', '101', '0', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+/*****************************************************************************/
+
+
+(NULL, 'Administrador2', '$2y$10$NuzHvNwHi8LsCJeYILXyU.UvPBUOGtnOVE7yDYNQ/eWiZ6FYBrgQO', '$2y$10$NuzHvNwHi8LsCJeYILXyUCjFlcTXsA==$', 'Nelson Florez', '101', '1234567890', '101', '102', '101', '0', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL), /* Ediciones123 */
+(NULL, 'Diego', '$2y$10$NuzHvNwHi8LsCJeYILXyU.UvPBUOGtnOVE7yDYNQ/eWiZ6FYBrgQO', '$2y$10$NuzHvNwHi8LsCJeYILXyUCjFlcTXsA==$', 'Diego Florez', '101', '1234567890', '101', '102', '101', '0', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL), /* Ediciones123 */
+(NULL, 'Vendedor1', '$2y$10$QHJVMehE044ViuC3J.epQuVIzfDGALigKKqLiUoW.ArVwtXG4RloO', '$2y$10$QHJVMehE044ViuC3J.epQ6BmFacTdQ==$', 'Fabiola Guzmán', '101', '1234567890', '102', '101', '101', '0', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL), /* Ediciones123 */
+(NULL, 'Vendedor2', '$2y$10$gG5xJS9T7y2Zv0XgYz87IenZwniYHV6o3adIVA3.DsAcolBF7OSve', '$2y$10$gG5xJS9T7y2Zv0XgYz87ImeRrK1T9w==$', 'Hector Gómez', '101', '1234567890', '102', '102', '101', '0', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL), /* Ediciones123 */
+(NULL, 'Auxiliar1', '$2y$10$JhFCeoScSOwLEKEwkTwPYuRn/icCy2D.0yLK0.N2XeFj3zQdj8Zw.', '$2y$10$JhFCeoScSOwLEKEwkTwPY2EvJJq78w==$', 'Fernando Galeano', '101', '1234567890', '103', '101', '101', '0', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL), /* Ediciones123 */
+(NULL, 'Auxiliar2', '$2y$10$Jb8BFVJCLpiWs4BoJNMWG.mCSebncUS73X/OtxFt1MeSALu9qXVNK', '$2y$10$Jb8BFVJCLpiWs4BoJNMWGIzwnFcilw==$', 'Carolina Montaño', '101', '1234567890', '103', '101', '101', '0', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL) /* Ediciones123 */; 
+
+
+/*Productos*/
+INSERT INTO 
+`Productos` 
+(`Codigo`, `Nombre`, `Valor`, `Habilitado`, `UsuarioCreacion`, `FechaCreacion`, `UsuarioModificacion`, `FechaModificacion`) 
+VALUES 
+(NULL, 'Biblia Grande', '350000', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Devocionario', '350000', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Biblia Pequeña', '120000', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Atril de Pie', '150000', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Atril Pequeño', '50000', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Virgen', '30000', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL);
+
+
+/*Tarifas*/
+INSERT INTO 
+`Tarifas` 
+(`Codigo`, `Nombre`, `Producto`, `Valor`, `Cuotas`, `ValorCuota`, `Descuento`, `Habilitado`, `UsuarioCreacion`, `FechaCreacion`, `UsuarioModificacion`, `FechaModificacion`) 
+VALUES 
+(1, 'Tarifa Importada sin Valor', 101, '0', '0', '0', '0', '0', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, '7 Cuota - Biblia $350.000', 101, '350000', '7', '50000', '0', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, '10 Cuota - Biblia $350.000', 101, '350000', '10', '35000', '0', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, '3 Cuota - Biblia $300.000', 101, '300000', '3', '100000', '50000', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, '2 Cuota - Biblia $280.000', 101, '280000', '2', '140000', '70000', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, '1 Cuota - Biblia $250.000', 101, '250000', '1', '250000', '100000', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+
+(NULL, '7 Cuota - Devocionario $350.000', 102, '350000', '7', '50000', '0', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, '10 Cuota - Devocionario $350.000', 102, '350000', '10', '35000', '0', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, '3 Cuota - Devocionario $300.000', 102, '300000', '3', '100000', '50000', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, '2 Cuota - Devocionario $280.000', 102, '280000', '2', '140000', '70000', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, '1 Cuota - Devocionario $250.000', 102, '250000', '1', '250000', '100000', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+
+(NULL, '3 Cuota - Biblia Pequeña $120.000', 103, '120000', '3', '40000', '0', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, '2 Cuota - Biblia Pequeña $100.000', 103, '100000', '2', '50000', '20000', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, '1 Cuota - Biblia Pequeña $90.000', 103, '90000', '1', '90000', '30000', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+
+(NULL, '3 Cuota - Atril de Pie $150.000', 104, '150000', '3', '50000', '0', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, '2 Cuota - Atril de Pie $120.000', 104, '120000', '2', '60000', '30000', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, '1 Cuota - Atril de Pie $100.000', 104, '100000', '1', '100000', '50000', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+
+(NULL, '1 Cuota - Atril Pequeño $50.000', 105, '50000', '1', '50000', '0', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+
+(NULL, '1 Cuota - Estatua Virgen $30.000', 106, '30000', '1', '30000', '0', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL);
+
+
+/* Vendedores */
+INSERT INTO 
+`Vendedores` 
+(`Codigo`, `Usuario`, `Nombre`, `Estado`, `Habilitado`, `UsuarioCreacion`, `FechaCreacion`, `UsuarioModificacion`, `FechaModificacion`) 
+VALUES 
+(NULL, 'Vendedor1', 'Fabiola Guzmán', '107', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL), 
+(NULL, 'Vendedor2', 'Hector Gómez', '107', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL);
+
+
+/*Cobradores*/
+INSERT INTO 
+`Cobradores` 
+(`Codigo`, `Nombre`, `TipoDocumento`, `Documento`, `Direccion`, `Telefono1`, `Telefono2`, `Correo`, `Estado`, `Habilitado`, `UsuarioCreacion`, `FechaCreacion`, `UsuarioModificacion`, `FechaModificacion`) 
+VALUES 
+(NULL, 'Jairo Gonzalez', '101', '67888999', 'Cl 3 A # 32-14 Sur', '4556677', NULL, 'jairo.gonza119@correo.com.co', '119', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL);
+
+
+/*Evento Guía*/
+INSERT INTO 
+`Eventos` 
+(`Codigo`, `Vendedor`, `Iglesia`, `Barrio`, `Fecha`, `Habilitado`, `UsuarioCreacion`, `FechaCreacion`, `UsuarioModificacion`, `FechaModificacion`)
+VALUES 
+(NULL, '101', 'Sin Evento', 'Sin Barrio', '2018-05-30 07:00:00', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL);
+
+/*Dirección Guía*/
+INSERT INTO `Direcciones` 
+(`Codigo`, `Direccion`, `Etapa`, `Torre`, `Apartamento`, `Manzana`, `Interior`, `Casa`, `Barrio`, `TipoVivienda`, `Habilitado`, `UsuarioCreacion`, `FechaCreacion`, `UsuarioModificacion`, `FechaModificacion`) 
+VALUES 
+(1, 'Dirección Guia', '', '', '', '', '', '', '', '101', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*////////////////////////////////////////////////////////////*/
+/*////////////////////////////////////////////////////////////*/
+/*////////////////////////////////////////////////////////////*/
+
+
+/*Moroso*/
+INSERT INTO `Direcciones` 
+(`Codigo`, `Direccion`, `Etapa`, `Torre`, `Apartamento`, `Manzana`, `Interior`, `Casa`, `Barrio`, `TipoVivienda`, `Habilitado`, `UsuarioCreacion`, `FechaCreacion`, `UsuarioModificacion`, `FechaModificacion`) 
+VALUES 
+(101, 'Tr 45 19-08', '', '9', '608', '', '', '', 'Palermo', 101, 1, 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(102, 'Tr 45 19-08', '', '9', '605', '', '', '', 'Palermo', 101, 1, 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(103, 'Tr 45 19-08', '', '9', '604', '', '', '', 'Palermo', 101, 1, 'ADMIN', '2018-05-30 07:00:00', NULL, NULL);
+
+INSERT INTO 
+`Clientes` 
+(`Codigo`, `Nombre`, `TipoDocumento`, `Documento`, `Direccion`, `Telefono1`, `Telefono2`, `Telefono3`, `Estado`, `Observaciones`, `Habilitado`, `UsuarioCreacion`, `FechaCreacion`, `UsuarioModificacion`, `FechaModificacion`) 
+VALUES 
+(NULL, 'Fernanda Rojas', '101', '67554431', '101', '3203332201', '3203332202', '3203332203', '104', '', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Maria Soto', '101', '67554432', '102', '3203332201', '3203332202', '3203332203', '104', '', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 'Adriana Pelaez', '101', '67554433', '103', '3203332201', '3203332202', '3203332203', '104', '', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL);
+
+INSERT INTO
+ `Pedidos` 
+(`Codigo`, `Cliente`, `Valor`, `Tarifa`, `DiaCobro`, `Estado`, `Evento`, `Vendedor`, `FechaPedido`, `Saldo`, `FechaUltimoPago`, `PaginaFisica`, `Observaciones`, `Habilitado`, `UsuarioCreacion`, `FechaCreacion`, `UsuarioModificacion`, `FechaModificacion`) 
+VALUES 
+(NULL, '1001', '350000', '101', '2018-08-22 07:00:00', '111', '101', '101', '2018-03-30 07:00:00', '350000', NULL, '0', NULL, '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, '1002', '350000', '101', '2018-08-22 07:00:00', '111', '101', '101', '2018-03-30 07:00:00', '350000', NULL, '0', NULL, '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL), 
+(NULL, '1003', '350000', '101', '2018-08-22 07:00:00', '111', '101', '101', '2018-03-30 07:00:00', '350000', NULL, '0', NULL, '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL);
+
+INSERT INTO 
+`ProductosPedidos` 
+(`Codigo`, `Pedido`, `Cantidad`, `Producto`, `Valor`, `Habilitado`, `UsuarioCreacion`, `FechaCreacion`, `UsuarioModificacion`, `FechaModificacion`)
+VALUES
+(NULL, 1001, 1, 101, 350000, 1, 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 1002, 1, 101, 350000, 1, 'ADMIN', '2018-05-30 07:00:00', NULL, NULL),
+(NULL, 1003, 1, 101, 350000, 1, 'ADMIN', '2018-05-30 07:00:00', NULL, NULL);
+
+
+
+
+
+/*Vaciar Base de datos*/
+TRUNCATE TABLE `Cobradores`;
+TRUNCATE TABLE `ReferenciasCliente`;
+TRUNCATE TABLE `Referencias`;
+TRUNCATE TABLE `ProductosPedidos`;
+TRUNCATE TABLE `PagosProgramados`;
+TRUNCATE TABLE `Pagos`;
+TRUNCATE TABLE `Llamadas`;
+TRUNCATE TABLE `HistorialPagos`;
+TRUNCATE TABLE `DevolucionLlamadas`;
+TRUNCATE TABLE `Devoluciones`;
+TRUNCATE TABLE `Log`;
+TRUNCATE TABLE `ValidacionDeudas`;
+TRUNCATE TABLE `ClientesUsuarios`;
+TRUNCATE TABLE `Pedidos`;
+TRUNCATE TABLE `Eventos`;
+TRUNCATE TABLE `Direcciones`;
+TRUNCATE TABLE `Clientes`;
+
+INSERT INTO `Eventos` (`Codigo`, `Vendedor`, `Iglesia`, `Barrio`, `Fecha`, `Habilitado`, `UsuarioCreacion`, `FechaCreacion`, `UsuarioModificacion`, `FechaModificacion`) VALUES (NULL, '101', 'Sin Evento', 'Sin Barrio', '2018-05-30 07:00:00', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL);
+
+INSERT INTO `Direcciones` (`Codigo`, `Direccion`, `Etapa`, `Torre`, `Apartamento`, `Manzana`, `Interior`, `Casa`, `Barrio`, `TipoVivienda`, `Habilitado`, `UsuarioCreacion`, `FechaCreacion`, `UsuarioModificacion`, `FechaModificacion`) VALUES (1, 'Dirección Guia', '', '', '', '', '', '', '', '101', '1', 'ADMIN', '2018-05-30 07:00:00', NULL, NULL);
+
+INSERT INTO `Cobradores` (`Codigo`, `Nombre`, `TipoDocumento`, `Documento`, `Direccion`, `Telefono1`, `Telefono2`, `Correo`, `Estado`, `Habilitado`, `UsuarioCreacion`, `FechaCreacion`, `UsuarioModificacion`, `FechaModificacion`) VALUES (NULL, 'Pedro Infante', '101', '123456', 'Calle falsa 123', '', '', '', '119', '1', 'ADMIN', '2018-08-21 07:00:00', NULL, NULL)
+
+
+
+
+
+TRUNCATE TABLE `PagosProgramados`;
+TRUNCATE TABLE `Pagos`;
+TRUNCATE TABLE `Llamadas`;
+TRUNCATE TABLE `HistorialPagos`;
+TRUNCATE TABLE `DevolucionLlamadas`;
+TRUNCATE TABLE `Log`;
+TRUNCATE TABLE `ValidacionDeudas`;
+UPDATE `Pedidos` SET `DiaCobro` = '2019-04-08 00:00:00', `Saldo` = '350000';
+
+
+
+
+
+//*Contar Cuantos Cobros ha realizado cada Cobrados*//
+
+SELECT C.Nombre "Nombre del Cobrador", COUNT(P.Cobrador) AS "Cobros Realizados" 
+FROM Pagos P
+INNER JOIN Cobradores C ON C.Codigo = P.Cobrador
+GROUP BY Cobrador
+
+
+
+//*Contar Ventas por Vendedor*//
+SELECT V.Nombre "Nombre del Vendedor", COUNT(P.Vendedor) "Número de Ventas"
+FROM Pedidos P
+INNER JOIN Vendedores V ON V.Codigo = P.Vendedor
+GROUP BY P.Vendedor
