@@ -1,11 +1,10 @@
 <?php
 
-defined('BASEPATH') or exit('No direct script access allowed');
+defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Cobradores_model extends CI_Model
-{
-    public function obtenerCobradores()
-    {
+class Cobradores_model extends CI_Model {
+
+    public function obtenerCobradores() {
         $this->db->where('Estado', '119');
         $this->db->where('Habilitado', '1');
         $query = $this->db->get("Cobradores");
@@ -16,8 +15,7 @@ class Cobradores_model extends CI_Model
         }
     }
 
-    public function obtenerCobrador($cod)
-    {
+    public function obtenerCobrador($cod) {
         $this->db->where('Codigo', $cod);
         $this->db->where('Habilitado', '1');
         $query = $this->db->get("Cobradores");
@@ -28,8 +26,7 @@ class Cobradores_model extends CI_Model
         }
     }
 
-    public function obtenerMotivosLlamadas()
-    {
+    public function obtenerMotivosLlamadas() {
         $this->db->where('Habilitado', '1');
         $query = $this->db->get("MotivosLlamadas");
         if ($query->num_rows() <= 0) {
@@ -39,8 +36,7 @@ class Cobradores_model extends CI_Model
         }
     }
 
-    public function obtenerMotivosLlamadasCod($codigo)
-    {
+    public function obtenerMotivosLlamadasCod($codigo) {
         $this->db->where('Codigo', $codigo);
         $this->db->where('Habilitado', '1');
         $query = $this->db->get("MotivosLlamadas");
@@ -51,8 +47,7 @@ class Cobradores_model extends CI_Model
         }
     }
 
-    public function obtenerLlamada($codigo)
-    {
+    public function obtenerLlamada($codigo) {
         $this->db->where('Codigo', $codigo);
         $query = $this->db->get("Llamadas");
         if ($query->num_rows() <= 0) {
@@ -62,38 +57,7 @@ class Cobradores_model extends CI_Model
         }
     }
 
-    public function obtenerLlamadaCampos($codigo, $select)
-    {
-        $this->db->select($select);
-        $this->db->where('Codigo', $codigo);
-        $query = $this->db->get("Llamadas");
-        //echo $this->db->last_query()."<br><br>";
-        if ($query->num_rows() <= 0) {
-            return false;
-        } else {
-            return $query->result_array();
-        }
-    }
-
-    public function obtenerLlamadasPedidoCliente($pedido, $cliente)
-    {
-        $this->db->select('ll.*, m.color, m.Nombre as nombreMotivo, m.Codigo as codMotivo');
-        $this->db->from('Llamadas as ll');
-        $this->db->join('MotivosLlamadas as m', 'll.Motivo = m.Codigo');
-        $this->db->where('Pedido', $pedido);
-        $this->db->where('Cliente', $cliente);
-        $this->db->order_by('FechaCreacion', 'ASC');
-        $query = $this->db->get();
-        //echo $this->db->last_query();
-        if ($query->num_rows() <= 0) {
-            return false;
-        } else {
-            return $query->result_array();
-        }
-    }
-
-    public function obtenerLlamadasPedidoFecha($pedido, $cliente, $fecha)
-    {
+    public function obtenerLlamadasPedidoFecha($pedido, $cliente, $fecha) {
         $this->db->select('ll.*, m.color, m.Nombre as nombreMotivo, m.Codigo as codMotivo');
         $this->db->from('Llamadas as ll');
         $this->db->join('MotivosLlamadas as m', 'll.Motivo = m.Codigo');
@@ -110,8 +74,7 @@ class Cobradores_model extends CI_Model
         }
     }
 
-    public function obtenerLlamadasPedidoFechas($pedido, $cliente, $fecha1, $fecha2)
-    {
+    public function obtenerLlamadasPedidoFechas($pedido, $cliente, $fecha1, $fecha2) {
         $this->db->select('ll.*, m.color, m.Nombre as nombreMotivo, m.Codigo as codMotivo');
         $this->db->from('Llamadas as ll');
         $this->db->join('MotivosLlamadas as m', 'll.Motivo = m.Codigo');
@@ -121,7 +84,7 @@ class Cobradores_model extends CI_Model
         $this->db->where('Fecha <=', $fecha2);
         $this->db->order_by('FechaCreacion', 'ASC');
         $query = $this->db->get();
-        //echo $this->db->last_query();
+        //echo $this->db->last_query()."<br><br>";
         if ($query->num_rows() <= 0) {
             return false;
         } else {
@@ -129,24 +92,8 @@ class Cobradores_model extends CI_Model
         }
     }
 
-    public function obtenerLlamadasPedidoCodigo($codigo)
-    {
-        $this->db->select('ll.*, m.color, m.Nombre as nombreMotivo, m.Codigo as codMotivo');
-        $this->db->from('Llamadas as ll');
-        $this->db->join('MotivosLlamadas as m', 'll.Motivo = m.Codigo');
-        $this->db->where('ll.Codigo', $codigo);
-        $this->db->order_by('FechaCreacion', 'ASC');
-        $query = $this->db->get();
-        //echo $this->db->last_query();
-        if ($query->num_rows() <= 0) {
-            return false;
-        } else {
-            return $query->result_array();
-        }
-    }
 
-    public function obtenerDevolucionLlamadasPedidoFecha($pedido, $cliente, $fecha)
-    {
+    public function obtenerDevolucionLlamadasPedidoFecha($pedido, $cliente, $fecha) {
         $this->db->select('ll.*, m.color, m.Nombre as nombreMotivo, m.Codigo as codMotivo');
         $this->db->from('DevolucionLlamadas as ll');
         $this->db->join('MotivosLlamadas as m', 'll.Motivo = m.Codigo');
@@ -163,8 +110,7 @@ class Cobradores_model extends CI_Model
         }
     }
 
-    public function obtenerDevolucionLlamadasPedidoFechaCre($pedido, $cliente, $fecha)
-    {
+    public function obtenerDevolucionLlamadasPedidoFechaCre($pedido, $cliente, $fecha) {
         $this->db->select('ll.*, m.color, m.Nombre as nombreMotivo, m.Codigo as codMotivo');
         $this->db->from('DevolucionLlamadas as ll');
         $this->db->join('MotivosLlamadas as m', 'll.Motivo = m.Codigo');
@@ -182,8 +128,7 @@ class Cobradores_model extends CI_Model
         }
     }
 
-    public function obtenerLlamadasPedidoFechaPro($pedido, $cliente, $fecha)
-    {
+    public function obtenerLlamadasPedidoFechaPro($pedido, $cliente, $fecha) {
         $this->db->select('ll.*, m.color, m.Nombre as nombreMotivo, m.Codigo as codMotivo');
         $this->db->from('Llamadas as ll');
         $this->db->join('MotivosLlamadas as m', 'll.Motivo = m.Codigo');
@@ -200,8 +145,7 @@ class Cobradores_model extends CI_Model
         }
     }
 
-    public function obtenerDevolucionLlamadasPedidoFechaPro($pedido, $cliente, $fecha)
-    {
+    public function obtenerDevolucionLlamadasPedidoFechaPro($pedido, $cliente, $fecha) {
         $this->db->select('ll.*, m.color, m.Nombre as nombreMotivo, m.Codigo as codMotivo');
         $this->db->from('DevolucionLlamadas as ll');
         $this->db->join('MotivosLlamadas as m', 'll.Motivo = m.Codigo');
@@ -218,8 +162,7 @@ class Cobradores_model extends CI_Model
         }
     }
 
-    public function obtenerLlamadasMotivoFechaPro($fecha)
-    {
+    public function obtenerLlamadasMotivoFechaPro($fecha) {
         $this->db->select('ll.*, m.color, m.Nombre as nombreMotivo');
         $this->db->from('Llamadas as ll');
         $this->db->join('MotivosLlamadas as m', 'll.Motivo = m.Codigo');
@@ -234,14 +177,13 @@ class Cobradores_model extends CI_Model
         }
     }
 
-    public function obtenerDevolucionLlamadasMotivoFechaPro($fechaI, $fechaF)
-    {
-        $this->db->select('ll.*, m.color, m.Nombre as nombreMotivo, p.Cliente');
+    public function obtenerDevolucionLlamadasMotivoFechaPro($fechaI, $fechaF) {
+        $this->db->select('ll.*, m.color, m.Nombre as nombreMotivo');
         $this->db->from('DevolucionLlamadas as ll');
         $this->db->join('MotivosLlamadas as m', 'll.Motivo = m.Codigo');
-        $this->db->join('Pedidos as p', 'll.Pedido = p.Codigo');
-        $this->db->where('Fecha >=', $fechaI." 00:00:00");
-        $this->db->where('Fecha <=', $fechaF." 23:59:59");
+        $this->db->where('Fecha >=', $fechaI);
+        $this->db->where('Fecha <=', $fechaF);
+        
         $this->db->order_by('FechaCreacion', 'DESC');
         $query = $this->db->get();
         //echo $this->db->last_query()."<br><br>";
@@ -252,35 +194,7 @@ class Cobradores_model extends CI_Model
         }
     }
 
-    public function obtenerLlamadasxNoDevolucion($cliente, $pedido)
-    {
-        $this->db->where('Cliente', $cliente);
-        $this->db->where('Pedido', $pedido);
-        $query = $this->db->get("Llamadas");
-        //echo $this->db->last_query()."<br><br>";
-        if ($query->num_rows() <= 0) {
-            return false;
-        } else {
-            return $query->result_array();
-        }
-    }
-
-    public function obtenerVolverLlamadasxNoDevolucion($cliente, $pedido)
-    {
-        $this->db->where('Cliente', $cliente);
-        $this->db->where('Pedido', $pedido);
-        $query = $this->db->get("DevolucionLlamadas");
-        //echo $this->db->last_query()."<br><br>";
-        if ($query->num_rows() <= 0) {
-            return false;
-        } else {
-            return $query->result_array();
-        }
-    }
-
-
-    public function saveLlamada($data)
-    {
+    public function saveLlamada($data) {
         if ($this->db->insert("Llamadas", $data)) {
             return $error = $this->db->error();
         } else {
@@ -288,17 +202,15 @@ class Cobradores_model extends CI_Model
         }
     }
 
-    public function saveDevolucionLlamada($data)
-    {
+    public function saveDevolucionLlamada($data) {
         if (!$this->db->insert("DevolucionLlamadas", $data)) {
             return $error = $this->db->error();
         } else {
             return 1;
         }
-    }
+    } 
 
-    public function updateLlamada($codigo, $data)
-    {
+    public function updateLlamada($codigo, $data) {
         $this->db->where("Codigo", $codigo);
         if ($this->db->update("Llamadas", $data)) {
             return $error = $this->db->error();
@@ -307,14 +219,15 @@ class Cobradores_model extends CI_Model
         }
     }
 
-    public function updateDevolucionLlamada($codigo, $data)
-    {
+    public function updateDevolucionLlamada($codigo, $data) {
         $this->db->where("Codigo", $codigo);
         if ($this->db->update("DevolucionLlamadas", $data)) {
-            //echo $this->db->last_query()."<br><br>";
-            return 1;
-        } else {
             return $error = $this->db->error();
+        } else {
+            return 1;
         }
     }
+
 }
+
+?>

@@ -91,13 +91,37 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                                     <a href="<?= base_url() . "Pagos/PagarMora/" . $item["Codigo"] . "/"; ?>" title="Pagar Saldo"><i class="fa fa-motorcycle" aria-hidden="true" style="padding:5px;"></i></a>
                                                     <?php
                                                     if ($item["Estado"] == '125') {
+                                                        $idPermiso = 105;
+                                                        $accion = validarPermisoAcciones($idPermiso);
+                                                        if ($accion) {
+                                                            ?>
+                                                            <a href="<?= base_url() . "Pagos/CartaData/" . $item["Codigo"] . "/"; ?>" target="_blank" title="Generar Reporte a Datacrédito"><i class="fa fa-book" aria-hidden="true" style="padding:5px;"></i></a>
+                                                            <?php
+                                                        }
+                                                        $idPermiso = 106;
+                                                        $accion = validarPermisoAcciones($idPermiso);
+                                                        if ($accion) { 
+                                                            ?>
+                                                            <a href="#ModalReport" data-toggle="modal" title="Reportar Datacrédito" onclick="dataModalReport('<?= $item["Codigo"]; ?>');"><i class="fa fa-balance-scale" aria-hidden="true" style="padding:5px;"></i></a>
+                                                            <?php
+                                                        }
+                                                    }
+                                                    $idPermiso = 90;
+                                                    $accion = validarPermisoAcciones($idPermiso);
+                                                    if ($accion) {
                                                         ?>
-                                                        <a href="<?= base_url() . "Pagos/CartaData/" . $item["Codigo"] . "/"; ?>" target="_blank" title="Generar Reporte a Datacrédito"><i class="fa fa-book" aria-hidden="true" style="padding:5px;"></i></a>
-                                                        <a href="#ModalReport" data-toggle="modal" title="Reportar Datacrédito" onclick="dataModalReport('<?= $item["Codigo"]; ?>');"><i class="fa fa-balance-scale" aria-hidden="true" style="padding:5px;"></i></a>
+                                                        <a href="#ModalDevol" data-toggle="modal" title="Devolución del Cliente" onclick="DatosModal('<?= $item["Codigo"]; ?>', '<?= $item["Cliente"]; ?>', '<?= $item["Nombre"]; ?>', '<?= $item["Saldo"]; ?>', '<?= $item["Cuotas"]; ?>');"><i class="fa fa-reply-all" aria-hidden="true" style="padding:5px;"></i></a>
+                                                        <?php
+                                                    }
+
+                                                    $idPermiso = 26;
+                                                    $accion = validarPermisoAcciones($idPermiso);
+                                                    if ($accion) {
+                                                        ?>
+                                                        <a href = "<?= base_url() . "Clientes/Log/" . $item["Codigo"] . "/"; ?>" title = "Registros del Cliente"><i class = "fa fa-list-alt" aria-hidden = "true" style = "padding:5px;"></i></a>
                                                         <?php
                                                     }
                                                     ?>
-                                                    <a href="#ModalDevol" data-toggle="modal" title="Devolución del Cliente" onclick="DatosModal('<?= $item["Codigo"]; ?>', '<?= $item["Cliente"]; ?>', '<?= $item["Nombre"]; ?>', '<?= $item["Saldo"]; ?>', '<?= $item["Cuotas"]; ?>');"><i class="fa fa-reply-all" aria-hidden="true" style="padding:5px;"></i></a>
                                                 </div>                                        
                                             </td>
                                         </tr>

@@ -1,11 +1,10 @@
 <?php
 
-defined('BASEPATH') or exit('No direct script access allowed');
+defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Devoluciones extends CI_Controller
-{
-    public function __construct()
-    {
+class Devoluciones extends CI_Controller {
+
+    public function __construct() {
         parent::__construct();
         $this->viewControl = 'Devoluciones';
         $this->load->model('Devoluciones_model');
@@ -15,19 +14,17 @@ class Devoluciones extends CI_Controller
         $this->load->model('Estados_model');
         $this->load->model('Cobradores_model');
         if (!$this->session->userdata('Login')) {
-            $this->session->set_flashdata("error", "Debe iniciar sesión antes de continuar. Después irá a: http://".$_SERVER[HTTP_HOST].$_SERVER[REQUEST_URI]);
+            $this->session->set_flashdata("error", "Debe iniciar sesión antes de continuar. Después irá a: http://".$_SERVER[HTTP_HOST].$_SERVER[REQUEST_URI] );
             $url = str_replace("/", "|", $_SERVER["REQUEST_URI"]);
             redirect(site_url("Login/index/" . substr($url, 1)));
         }
     }
 
-    public function index()
-    {
+    public function index() {
         redirect(site_url($this->viewControl . "/Admin/"));
     }
 
-    public function Admin()
-    {
+    public function Admin() {
         $data = new stdClass();
         $data->Controller = "Devoluciones";
         $data->title = "Listado de Devoluciones";
@@ -37,8 +34,7 @@ class Devoluciones extends CI_Controller
         $this->load->view('frontend', $data);
     }
 
-    public function listadoDevoluviones()
-    {
+    public function listadoDevoluviones() {
         $user = "*";
         $fechaIni = date('Y-m-d') . " 00:00:00";
         $fechaFin = date('Y-m-d') . " 23:59:59";
@@ -47,13 +43,12 @@ class Devoluciones extends CI_Controller
         echo json_encode($arreglo);
     }
 
-    public function consultarDevolucion($user, $fechaIni, $fechaFin)
-    {
+    public function consultarDevolucion($user, $fechaIni, $fechaFin) {
         try {
             $dataDevolucion = $this->Devoluciones_model->obtenerDevolucionesFechaUser($user, $fechaIni, $fechaFin);
             $arreglo["data"] = [];
 
-            if (isset($dataDevolucion) && $dataDevolucion != false) {
+            if (isset($dataDevolucion) && $dataDevolucion != FALSE) {
                 $i = 0;
                 foreach ($dataDevolucion as $item) {
                     $btn1 = "<a href='" . base_url() . "Clientes/Consultar/" . $item['Cliente'] . "/' title='Ver Información de Cliente'><i class='fa fa-search' aria-hidden='true' style='padding:5px;'></i></a>";
@@ -84,8 +79,7 @@ class Devoluciones extends CI_Controller
         }
     }
 
-    public function FiltroDevol()
-    {
+    public function FiltroDevol() {
         $user = "*"; //trim($this->input->post('pag_usu'));
         $fechaIni = trim($this->input->post('pag_fec1'));
         $date = str_replace('/', '-', $fechaIni);
@@ -99,8 +93,7 @@ class Devoluciones extends CI_Controller
         echo json_encode($arreglo);
     }
 
-    public function Generar()
-    {
+    public function Generar() {
         $idPermiso = 97;
         $accion = validarPermisoAcciones($idPermiso);
         if ($accion) {
@@ -126,11 +119,11 @@ class Devoluciones extends CI_Controller
                             echo "El número de Cuotas no es válido. Actualice la página y vuelva a intentarlo.";
                         } else {
                             $dataPedido = $this->Pedidos_model->obtenerPedido($pedido);
-                            if ($dataPedido == false) {
+                            if ($dataPedido == FALSE) {
                                 echo "El Pedido no existe. Actualice la página y vuelva a intentarlo.";
                             } else {
                                 $dataCliente = $this->Clientes_model->obtenerCliente($cliente);
-                                if ($dataCliente == false) {
+                                if ($dataCliente == FALSE) {
                                     echo "El Cliente no existe. Actualice la página y vuelva a intentarlo.";
                                 } else {
                                     //Datos Auditoría
@@ -153,66 +146,70 @@ class Devoluciones extends CI_Controller
                                         if ($this->Devoluciones_model->save($devolucion)) {
                                             $dataDevoluciones = $this->Devoluciones_model->obtenerDevolución($pedido, $cliente, $user, $fecha);
                                             $codDevolucion = $dataDevoluciones [0]["Codigo"];
+                                            $devolucion["Observaciones"] = "Se genera Devolución\nCliente: " . $nombre . "\n" . $observaciones;
                                             $modulo = "Devolución Pedido";
-                                            $accion = "Crear Devolución";
                                             $tabla = "Devoluciones";
+                                            $accion = "Crear Devolución";
                                             $llave = $codDevolucion;
-                                            $cliente_log = $cliente;
-                                            $enlace = "Clientes|Consultar|" . $llave;
-                                            $dataInsert = $devolucion;
-                                            $observaciones = "Se genera Devolución\nCliente: " . $nombre . "\n" . $observaciones;
-                                            insertLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataInsert, $observaciones);
- 
+                                            $sql = LogSave($devolucion, $modulo, $tabla, $accion, $llave);
+
                                             $obs = $dataPedido[0]["Observaciones"] . "\n---\nSe genera Devolución:\n" . $observaciones;
 
                                             $dataActPedido = array(
                                                 "Estado" => 113, //Devoluciones
                                                 //"DiaCobro" => NULL,
-                                                // "Saldo" => 0,
-                                                "Observaciones" => $obs,
-                                                "UsuarioCreacion" => $user,
-                                                "FechaCreacion" => $fecha
-                                            );
-                                            
-                                            $dataOriginal = $dataPedido[0];
-                                            $dataNew = compararCambiosLog($dataOriginal, $dataActPedido);
-                                            $this->Pedidos_model->update($pedido, $dataNew);
-                                            $modulo = "Devolución Pedido";
-                                            $accion = "Actualizar Pedido";
-                                            $tabla = "Pedidos";
-                                            $llave = $pedido;
-                                            $cliente_log = $cliente;
-                                            $enlace = "Clientes|Consultar|" . $cliente;
-                                            $observaciones = "Se hace la Devolución del Pedido\n---\nSe actualiza Estado y se Anulan Cobros\n \nObservación automática.";
-                                            updateLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataOriginal, $dataNew, $observaciones);
-
-                                            //Se Crea Historial Pago
-                                            $this->History($cliente, $pedido, $fecha, $user, "Devolución de Pedido", intval($saldo * -1), 0, 0, 0, $observaciones);
-                                                
-                                            $dataActCliente = array(
-                                                "Estado" => 106, //Devolucion
+                                                // "Saldo" => 0, 
                                                 "Observaciones" => $obs,
                                                 "UsuarioCreacion" => $user,
                                                 "FechaCreacion" => $fecha
                                             );
 
-                                            $dataCliente = $this->Clientes_model->obtenerCliente($cliente);
-                                            $dataOriginal = $dataCliente[0];
-                                            $dataNew = compararCambiosLog($dataOriginal, $dataActCliente);
-                                            $this->Clientes_model->update($cliente, $dataNew);
-                                            $modulo = "Devolución Pedido";
-                                            $accion = "Actualizar Cliente";
-                                            $tabla = "Clientes";
-                                            $llave = $pedido;
-                                            $cliente_log = $cliente;
-                                            $enlace = "Clientes|Consultar|" . $cliente;
-                                            $observaciones = "Se hace cambio de Estado por Devolución de Pedido\n---\nSe actualiza Estado\n \nObservación automática.";
-                                            updateLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataOriginal, $dataNew, $observaciones);
+                                            if ($this->Pedidos_model->update($pedido, $dataActPedido)) {
+                                                $modulo = "Devolución Pedido";
+                                                $tabla = "Pedido";
+                                                $accion = "Actualizar Pedido";
+                                                $llave = $pedido;
+                                                $data = compararCambiosLog($dataPedido, $dataActPedido);
+                                                //var_dump($data);
+                                                if (count($data) > 2) {
+                                                    $data['Codigo'] = $pedido;
+                                                    $data['Observaciones'] = "Se hace la Devolución del Pedido\n---\nSe actualiza Saldo, Estado y se Anulan Cobros\n \nObservación automática.";
+                                                    $llave = $pedido;
+                                                    //Se Crea Historial Pago
+                                                    $this->History($cliente, $pedido, $fecha, $user, "Devolución de Pedido", intval($saldo * -1), 0, 0, 0, $observaciones);
+                                                    $sql = LogSave($data, $modulo, $tabla, $accion, $llave);
+                                                }
 
-                                            $this->Pagos_model->quitarPagosProgramaPendientePedido($pedido);
-                                            $this->Pagos_model->quitarllamadas($cliente, $pedido);
-                                            
-                                            echo 1;
+                                                $obs = $dataCliente[0]["Observaciones"] . "\n---\nSe genera Devolución:\n" . $observaciones;
+
+                                                $dataActCliente = array(
+                                                    "Estado" => 106, //Devolucion
+                                                    "Observaciones" => $obs,
+                                                    "UsuarioCreacion" => $user,
+                                                    "FechaCreacion" => $fecha
+                                                );
+
+                                                if ($this->Clientes_model->update($cliente, $dataActCliente)) {
+                                                    $modulo = "Devolución Pedido";
+                                                    $tabla = "Clientes";
+                                                    $accion = "Actualizar Cliente";
+                                                    $llave = $pedido;
+                                                    $data = compararCambiosLog($dataCliente, $dataActCliente);
+                                                    //var_dump($data);
+                                                    if (count($data) > 2) {
+                                                        $data['Codigo'] = $cliente;
+                                                        $data['Observaciones'] = "Se hace cambio de Estado por Devolución de Pedido\n---\nSe actualiza Estado\n \nObservación automática.";
+                                                        $llave = $cliente;
+                                                        $sql = LogSave($data, $modulo, $tabla, $accion, $llave);
+                                                    }
+                                                    $this->Pagos_model->quitarPagosProgramaPendientePedido($pedido);
+                                                    echo 1;
+                                                } else {
+                                                    echo "No se pudo guardar, por favor intentelo de nuevo.";
+                                                }
+                                            } else {
+                                                echo "No se pudo guardar, por favor intentelo de nuevo.";
+                                            }
                                         } else {
                                             echo "No se Generar la Devolución. Actualice la página y vuelva a intentarlo.";
                                         }
@@ -230,8 +227,7 @@ class Devoluciones extends CI_Controller
         }
     }
 
-    public function History($cliente, $pedido, $fecha, $usuario, $accion, $saldoAnt, $cuota, $saldoNue, $abono, $obs)
-    {
+    public function History($cliente, $pedido, $fecha, $usuario, $accion, $saldoAnt, $cuota, $saldoNue, $abono, $obs) {
         $historia = array(
             "Pedido" => $pedido,
             "Cliente" => $cliente,
@@ -248,14 +244,13 @@ class Devoluciones extends CI_Controller
         $this->Pagos_model->saveHistoria($historia);
     }
 
-    public function Consultar($codigo)
-    {
+    public function Consultar($codigo) {
         $dataDevolucion = $this->Devoluciones_model->obtenerDevoluciónCod($codigo);
-        if (isset($dataDevolucion) && $dataDevolucion != false) {
+        if (isset($dataDevolucion) && $dataDevolucion != FALSE) {
             $dataClientes = $this->Clientes_model->obtenerClienteDir($dataDevolucion[0]["Cliente"]);
-            if (isset($dataClientes) && $dataClientes != false) {
+            if (isset($dataClientes) && $dataClientes != FALSE) {
                 $dataCobradores = $this->Cobradores_model->obtenerCobrador($dataDevolucion[0]["Cobrador"]);
-                if (isset($dataCobradores) && $dataCobradores != false) {
+                if (isset($dataCobradores) && $dataCobradores != FALSE) {
                     $dataDevolucion[0]["NomCobrador"] = $dataCobradores [0]["Nombre"];
 
 
@@ -282,8 +277,7 @@ class Devoluciones extends CI_Controller
         }
     }
 
-    public function Contador()
-    {
+    public function Contador() {
         $f1 = date("Y-m-d 00:00:00");
         $f2 = date("Y-m-d 23:59:59");
 
@@ -297,4 +291,7 @@ class Devoluciones extends CI_Controller
 
         $this->load->view('frontend', $data);
     }
+
 }
+
+?>

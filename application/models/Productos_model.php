@@ -26,18 +26,6 @@ class Productos_model extends CI_Model {
         }
     }
 
-    public function obtenerProductosPedidosCampos($pedido, $producto, $select) {
-        $this->db->select($select);        
-        $this->db->where("Pedido", $pedido);
-        $this->db->where("Producto", $producto);
-        $query = $this->db->get("ProductosPedidos");
-        //echo $this->db->last_query()."<br><br>";
-        if ($query->num_rows() <= 0) {
-            return false;
-        } else {
-            return $query->result_array();
-        }
-    }
     
     public function obtenerConceptos() {
         $this->db->where('Habilitado', '1');

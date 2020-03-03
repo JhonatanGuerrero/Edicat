@@ -1,11 +1,10 @@
 <?php
 
-defined('BASEPATH') or exit('No direct script access allowed');
+defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Clientes extends CI_Controller
-{
-    public function __construct()
-    {
+class Clientes extends CI_Controller {
+
+    public function __construct() {
         parent::__construct();
         $this->viewControl = 'Clientes';
         $this->load->model('Clientes_model');
@@ -23,7 +22,7 @@ class Clientes extends CI_Controller
         $this->load->model('Usuarios_model');
 
         if (!$this->session->userdata('Login')) {
-            $this->session->set_flashdata("error", "Debe iniciar sesión antes de continuar. Después irá a: http://".$_SERVER[HTTP_HOST].$_SERVER[REQUEST_URI]);
+            $this->session->set_flashdata("error", "Debe iniciar sesión antes de continuar. Después irá a: http://".$_SERVER[HTTP_HOST].$_SERVER[REQUEST_URI] );
             $url = str_replace("/", "|", $_SERVER["REQUEST_URI"]);
             redirect(site_url("Login/index/" . substr($url, 1)));
         } else {
@@ -31,84 +30,55 @@ class Clientes extends CI_Controller
         }
     }
 
-    public function index()
-    {
+    public function index() {
         redirect(site_url($this->viewControl . "/Admin/"));
-    }
- 
-    public function Admin()
-    {
-        echo "<h4>
-                <marquee>
-                    <ul>
-                        <li>Probar todos los procesos -> sigue Clientes/CambioTarifa/{id}</li>
-                        <li>Cliente Productos</li>
-                        <li>Permisos Pagos Y Clientes Moroso y Datacredito</li>
-                        <li>Permisos Llamadas del día y Clientes sin llamar</li>
-                        <li>Permisos de Cobradores/Pagos</li>
-                        <li>Forzar Cambio de Contraseña desde el perfil del Usuario</li>
-                        <li>Permisos del Usuarios/Permisos/Configuraciones</li>
-                        <li>Quitar comentario en obtenerListadosClientesCobroJson por programador</li>
-                        <li>Cambio de tarifa con varios productos. No da el saldo</li>                     
-                    </ul> 
-                </marquee>
-            </h4>";
+    } 
+      
+    public function Admin() {
         $idPermiso = 12;
         $page = validarPermisoPagina($idPermiso);
-        $permisoAplicado = 104;
 
         $dataCliente = $this->Clientes_model->obtenerClientesNR();
         $dataCobradores = $this->Cobradores_model->obtenerCobradores();
+        
+        $PerfilId = "";
 
         if ($dataCliente != false) {
             $i = 0;
-            $flagPermiso = 0;
             $usuario = $this->session->userdata('Codigo');
             $PerfilId = $this->session->userdata('PerfilId');
-
-            
-            $idPermiso = 104;
-            $page = validarPermisoAcciones($idPermiso);
-            if ($page && $flagPermiso == 0) {
-                $permisoAplicado = $idPermiso;
-                $flagPermiso = 1;
-                $dataCliente = null;
-            }
-
-            $idPermiso = 101;
-            $page = validarPermisoAcciones($idPermiso);
-            if ($page && $flagPermiso == 0) {
-                $permisoAplicado = $idPermiso;
-                $flagPermiso = 1;
-                $dataCliente = $this->InformacionTodos($dataCliente);
-            }
-            
-            $idPermiso = 102;
-            $page = validarPermisoAcciones($idPermiso);
-            if ($page && $flagPermiso == 0) {
-                $permisoAplicado = $idPermiso;
-                $flagPermiso = 1;
-                $dataCliente = $this->InformacionOtrosClientes($dataCliente);
-            }
-
-            $idPermiso = 103;
-            $page = validarPermisoAcciones($idPermiso);
-            if ($page && $flagPermiso == 0) {
-                $permisoAplicado = $idPermiso;
-                $flagPermiso = 1;
-                $dataCliente = $this->InformacionSoloClientesPropios($dataCliente);
+            $permisos = $this->SearchPermissions();  
+            foreach ($dataCliente as $value) {
+                $dataUserCliente = true;  
+                if (!$permisos["TodosClientes"]) 
+                    $dataUserCliente = $this->Clientes_model->ClienteUsuarioBool($value["Codigo"], $usuario);
+                else
+                    $dataUserCliente = true; 
+ 
+                if ($dataUserCliente) { 
+                    $pedido = $this->Pedidos_model->obtenerPedidoPorCliente($value["Codigo"]);
+                    if ($pedido != false) {
+                        $dataCliente[$i]["Pedido"] = $pedido[0]["Codigo"];
+                        $dataCliente[$i]["Saldo"] = $pedido[0]["Saldo"];
+                        $dataCliente[$i]["PaginaFisica"] = $pedido[0]["PaginaFisica"];
+                        $dataCliente[$i]["Nombre"] = ucwords(strtolower($dataCliente[$i]["Nombre"]));
+                        $cuotas = $this->Pagos_model->obtenerPagosPorPedido($pedido[0]["Codigo"]);
+                        if ($cuotas != FALSE) {
+                            $cuotas = $cuotas[0]["Cuotas"];
+                        }
+                        $dataCliente[$i]["Cuotas"] = $cuotas;
+                    }
+                } else {
+                    unset($dataCliente[$i]);
+                }
+                $i++;
             }
         }
-             
-        if (count($dataCliente) <= 0) {
-            if ($permisoAplicado == 104) {
-                $this->session->set_flashdata("error", "Usted no tiene Permisos para ver Clientes.");
+        else {
+            if ($PerfilId >= 103) {
+                $this->session->set_flashdata("error", "Usted no tiene Clientes Asociados.");
             } else {
-                if ($permisoAplicado == 103) {
-                    $this->session->set_flashdata("error", "Usted no tiene Clientes Asociados.");
-                } else {
-                    $this->session->set_flashdata("error", "Aun no hay Clientes/Pedidos creados.");
-                }
+                $this->session->set_flashdata("error", "Aun no hay Clientes/Pedidos creados.");
             }
         }
 
@@ -123,105 +93,11 @@ class Clientes extends CI_Controller
         $this->load->view('frontend', $data);
     }
 
-    public function InformacionTodos($dataCliente)
-    {
-        $i = 0;
-        foreach ($dataCliente as $value) {
-            //$dataUserCliente = $this->Clientes_model->ClienteUsuario($value["Codigo"], $usuario);
-            $pedido = $this->Pedidos_model->obtenerPedidoPorCliente($value["Codigo"]);
-            
-            if ($pedido != false) {
-                $dataCliente[$i]["Pedido"] = $pedido[0]["Codigo"];
-                $dataCliente[$i]["Saldo"] = $pedido[0]["Saldo"];
-                $dataCliente[$i]["PaginaFisica"] = $pedido[0]["PaginaFisica"];
-                $dataCliente[$i]["Nombre"] = ucwords(strtolower($dataCliente[$i]["Nombre"]));
-                $dataCliente[$i]["TodasOpciones"] = true;
-                $cuotas = $this->Pagos_model->obtenerPagosPorPedido($pedido[0]["Codigo"]);
-                if ($cuotas != false) {
-                    $cuotas = $cuotas[0]["Cuotas"];
-                }
-                $dataCliente[$i]["Cuotas"] = $cuotas;
-            } else {
-                unset($dataCliente[$i]);
-            }
-            $i++;
-        }
-
-        return $dataCliente;
-    }
-
-    public function InformacionOtrosClientes($dataCliente)
-    {
-        $i = 0;
-        foreach ($dataCliente as $value) {
-            $usuario = $this->session->userdata('Codigo');
-            $dataUserCliente = $this->Clientes_model->ClienteUsuario($value["Codigo"], $usuario);
-            $pedido = $this->Pedidos_model->obtenerPedidoPorCliente($value["Codigo"]);
-            
-            if ($pedido != false) {
-                $dataCliente[$i]["Pedido"] = $pedido[0]["Codigo"];
-                $dataCliente[$i]["Saldo"] = $pedido[0]["Saldo"];
-                $dataCliente[$i]["PaginaFisica"] = $pedido[0]["PaginaFisica"];
-                $dataCliente[$i]["Nombre"] = ucwords(strtolower($dataCliente[$i]["Nombre"]));
-                if ($dataUserCliente == false) {
-                    $dataCliente[$i]["TodasOpciones"] = false;
-                } else {
-                    $dataCliente[$i]["TodasOpciones"] = true;
-                }
-                $cuotas = $this->Pagos_model->obtenerPagosPorPedido($pedido[0]["Codigo"]);
-                if ($cuotas != false) {
-                    $cuotas = $cuotas[0]["Cuotas"];
-                }
-                $dataCliente[$i]["Cuotas"] = $cuotas;
-            } else {
-                unset($dataCliente[$i]);
-            }
-            $i++;
-        }
-
-        return $dataCliente;
-    }
-
-    public function InformacionSoloClientesPropios($dataCliente)
-    {
-        $i = 0;
-        foreach ($dataCliente as $value) {
-            $usuario = $this->session->userdata('Codigo');
-            $dataUserCliente = $this->Clientes_model->ClienteUsuario($value["Codigo"], $usuario);
-            
-            if ($dataUserCliente) {
-                $pedido = $this->Pedidos_model->obtenerPedidoPorCliente($value["Codigo"]);
-                
-                if ($pedido != false) {
-                    $dataCliente[$i]["Pedido"] = $pedido[0]["Codigo"];
-                    $dataCliente[$i]["Saldo"] = $pedido[0]["Saldo"];
-                    $dataCliente[$i]["PaginaFisica"] = $pedido[0]["PaginaFisica"];
-                    $dataCliente[$i]["Nombre"] = ucwords(strtolower($dataCliente[$i]["Nombre"]));
-                    $dataCliente[$i]["TodasOpciones"] = true;
-                    $cuotas = $this->Pagos_model->obtenerPagosPorPedido($pedido[0]["Codigo"]);
-                    if ($cuotas != false) {
-                        $cuotas = $cuotas[0]["Cuotas"];
-                    }
-                    $dataCliente[$i]["Cuotas"] = $cuotas;
-                } else {
-                    unset($dataCliente[$i]);
-                }
-            } else {
-                unset($dataCliente[$i]);
-            }
-            $i++;
-        }
-
-        return $dataCliente;
-    }
-
-
-    public function dataClienteHover()
-    {
+    public function dataClienteHover() {
         $id = trim($this->input->post('id'));
         $dataClientes = $this->Clientes_model->obtenerClienteDir($id);
         //var_dump($dataClientes);
-        if (isset($dataClientes) && $dataClientes != false) {
+        if (isset($dataClientes) && $dataClientes != FALSE) {
             $output = '';
             foreach ($dataClientes as $cliente) {
                 $direccion = $cliente["Dir"];
@@ -248,14 +124,13 @@ class Clientes extends CI_Controller
         }
     }
 
-    public function Buscar()
-    {
+    public function Buscar() {
         $idPermiso = 11;
         $page = validarPermisoPagina($idPermiso);
 
         $dataEstados = $this->Estados_model->obtenerEstadosPor(102);
         $dataCobradores = $this->Cobradores_model->obtenerCobradores();
-        if (isset($dataCobradores) && $dataCobradores != false) {
+        if (isset($dataCobradores) && $dataCobradores != FALSE) {
             $data = new stdClass();
             $data->Controller = "Clientes";
             $data->title = "Buscar Clientes";
@@ -271,49 +146,86 @@ class Clientes extends CI_Controller
         }
     }
 
-    public function SearchJsonAsignado()
-    {
-        $nombre =  ucwords(strtolower(trim($this->input->post('nombre'))));
+    public function SearchJsonAsignado() {
+        $nombre = ucwords(strtolower(trim($this->input->post('nombre'))));
         $estado = trim($this->input->post('estado'));
-        $usuario = trim($this->input->post('usuario'));
-        $selectNoEstados = trim($this->input->post('selectNoEstados'));
-        
-        $data = $this->Clientes_model->searchClienteAsignado($nombre, $estado, $usuario, $selectNoEstados);
-        $arreglo["data"] = [];
+        $usuario = "100";// trim($this->input->post('usuario')); 
 
-        if (isset($data) && $data != false) {
+        $data = $this->Clientes_model->searchClienteAsignado($nombre, $estado, $usuario);
+        $arreglo["data"] = [];
+        $permisos = $this->SearchPermissions(); 
+
+        if (isset($data) && $data != FALSE) {
             $i = 0;
             foreach ($data as $item) {
-                $arreglo["data"][$i] = $this->crearArregloBuscar($item);
+                $arreglo["data"][$i] = $this->crearArregloBuscar($item, $permisos);
                 $i++;
             }
         }
         echo json_encode($arreglo);
     }
 
-    public function SearchJson()
-    {
+    public function SearchJson() {
         $nombre = ucwords(strtolower(trim($this->input->post('nombre'))));
+        $cedula = trim($this->input->post('cedula'));
         $direccion = trim($this->input->post('direccion'));
         $telefono = trim($this->input->post('telefono'));
         $estado = trim($this->input->post('estado'));
         $ubicacion = trim($this->input->post('ubicacion'));
 
-        $data = $this->Clientes_model->searchCliente($nombre, $direccion, $telefono, $estado, $ubicacion);
+        $data = $this->Clientes_model->searchCliente($nombre, $cedula, $direccion, $telefono, $estado, $ubicacion);
         $arreglo["data"] = [];
+        $permisos = $this->SearchPermissions();  
 
-        if (isset($data) && $data != false) {
+        if (isset($data) && $data != FALSE) {
             $i = 0;
             foreach ($data as $item) {
-                $arreglo["data"][$i] = $this->crearArregloBuscar($item);
+                $arreglo["data"][$i] = $this->crearArregloBuscar($item, $permisos);
                 $i++;
             }
         }
         echo json_encode($arreglo);
     }
 
-    public function crearArregloBuscar($item)
-    {
+    public function SearchPermissions()
+    { 
+        $permisos = [];  
+
+        //Consultar Cliente
+        $idPermiso = 15;
+        $permisos["Consultar"] = validarPermisoAcciones($idPermiso);  
+        //Cambio de Fecha de Cobro
+        $idPermiso = 16;
+        $permisos["CambioFecha"] = validarPermisoAcciones($idPermiso);  
+        //Cambio de Tarifa
+        $idPermiso = 17;
+        $permisos["CambioTarifa"] = validarPermisoAcciones($idPermiso);  
+        //Hacer Recibo
+        $idPermiso = 19;
+        $permisos["Generar"] = validarPermisoAcciones($idPermiso);  
+        //Pagos Realizados del Cliente
+        $idPermiso = 23;
+        $permisos["Pagos"] = validarPermisoAcciones($idPermiso);  
+        //Devolución del Cliente
+        $idPermiso = 90;
+        $permisos["Devolucion"] = validarPermisoAcciones($idPermiso);  
+        //Ver solo Clientes Propios
+        $idPermiso = 103;
+        $permisos["TodosClientes"] = validarPermisoAcciones($idPermiso);  
+            
+        return $permisos;
+    }
+    
+    public function crearArregloBuscar($item, $permisos) 
+    {  
+        $btn1 = "";
+        $btn2 = "";
+        $btn3 = "";
+        $btn4 = "";
+        $btn5 = "";
+        $btn6 = "";
+        $btnOpciones = "Sin permisos";
+
         $direccion = $item["Dir"];
         $direccion = ($item["Etapa"] != "") ? $direccion . " ET " . $item["Etapa"] : $direccion;
         $direccion = ($item["Torre"] != "") ? $direccion . " TO " . $item["Torre"] : $direccion;
@@ -326,7 +238,7 @@ class Clientes extends CI_Controller
         $telefono = ($item["Telefono2"] != "") ? $telefono . " - " . $item["Telefono2"] : $telefono;
         $cuota = 0;
         $num = $this->Pagos_model->ultimaCuota($item['Pedido']);
-        if ($num != false) {
+        if ($num != FALSE) {
             $cuota = $num[0]["Cuota"];
         }
 
@@ -334,33 +246,40 @@ class Clientes extends CI_Controller
         $PerfilId = $this->session->userdata('PerfilId');
         $dataPedidos = $this->Pedidos_model->obtenerPedidosDeben();
         $dataCobradores = $this->Cobradores_model->obtenerCobradores();
-        $dataUserCliente = false;
-        if ($PerfilId >= 103) {
-            $dataUserCliente = $this->Clientes_model->ClienteUsuario($item['Cliente'], $usuario);
-        } else {
+        $dataUserCliente = true;
+         
+        if (!$permisos["TodosClientes"]) 
+            $dataUserCliente = $this->Clientes_model->ClienteUsuarioBool($item['Cliente'], $usuario); 
+        else
             $dataUserCliente = true;
-        }
-        if ($dataUserCliente != false) {
-            $btn2 = "<a href='" . base_url() . "Clientes/CambioFecha/" . $item['Cliente'] . "/' target='_blank' title='Cambio de Fecha de Cobro'><i class='fa fa-calendar' aria-hidden='true' style='padding:5px;'></i></a>";
-            $btn3 = "<a href='" . base_url() . "Clientes/CambioTarifa/" . $item['Cliente'] . "/' target='_blank' title='Cambio de Tarifa'><i class='fa fa-refresh' aria-hidden='true' style='padding:5px;'></i></a>";
-            $btn4 = "<a href='" . base_url() . "Pagos/Generar/" . $item['Cliente'] . "/' target='_blank' title='Hacer Recibo'><i class='fa fa-motorcycle' aria-hidden='true' style='padding:5px;'></i></a>";
-            $btn5 = "<a href='" . base_url() . "Clientes/Pagos/" . $item['Cliente'] . "/' target='_blank' title='Pagos Realizados del Cliente'><i class='fa fa-usd' aria-hidden='true' style='padding:5px;'></i></a>";
-            $btn6 = "<a href='#ModalDevol' data-toggle='modal' title='Devolución del Cliente' onclick='DatosModal(\"" . $item['Pedido'] . "\", \"" . $item['Cliente'] . "\", \"" . $item['Nombre'] . "\", \"" . $item['Saldo'] . "\", \"" . $cuota . "\");'><i class='fa fa-reply-all' aria-hidden='true' style='padding:5px;'></i></a>";
-        } else {
-            $btn2 = "";
-            $btn3 = "";
-            $btn4 = "";
-            $btn5 = "";
-            $btn6 = "";
-        }
-        $btn1 = "<a href='" . base_url() . "Clientes/Consultar/" . $item['Cliente'] . "/' target='_blank' title='Consultar Cliente'><i class='fa fa-search' aria-hidden='true' style='padding:5px;'></i></a>";
+ 
+        if ($permisos["Consultar"])
+            $btn1 = "<a href='" . base_url() . "Clientes/Consultar/" . $item['Cliente'] . "/' target='_blank' title='Consultar Cliente'><i class='fa fa-search' aria-hidden='true' style='padding:5px;'></i></a>";
+        
+        $dataUserCliente = true;
+        if ($dataUserCliente) { 
+            if ($permisos["CambioFecha"])
+                $btn2 = "<a href='" . base_url() . "Clientes/CambioFecha/" . $item['Cliente'] . "/' target='_blank' title='Cambio de Fecha de Cobro'><i class='fa fa-calendar' aria-hidden='true' style='padding:5px;'></i></a>";
+            if ($permisos["CambioTarifa"]) 
+                $btn3 = "<a href='" . base_url() . "Clientes/CambioTarifa/" . $item['Cliente'] . "/' target='_blank' title='Cambio de Tarifa'><i class='fa fa-refresh' aria-hidden='true' style='padding:5px;'></i></a>";
+            if ($permisos["Generar"]) 
+                $btn4 = "<a href='" . base_url() . "Pagos/Generar/" . $item['Cliente'] . "/' target='_blank' title='Hacer Recibo'><i class='fa fa-motorcycle' aria-hidden='true' style='padding:5px;'></i></a>";
+            if ($permisos["Pagos"])
+                $btn5 = "<a href='" . base_url() . "Clientes/Pagos/" . $item['Cliente'] . "/' target='_blank' title='Pagos Realizados del Cliente'><i class='fa fa-usd' aria-hidden='true' style='padding:5px;'></i></a>";
+            if ($permisos["Devolucion"])
+                $btn6 = "<a href='#ModalDevol' data-toggle='modal' title='Devolución del Cliente' onclick='DatosModal(\"" . $item['Pedido'] . "\", \"" . $item['Cliente'] . "\", \"" . $item['Nombre'] . "\", \"" . $item['Saldo'] . "\", \"" . $cuota . "\");'><i class='fa fa-reply-all' aria-hidden='true' style='padding:5px;'></i></a>";
+        }    
 
         $diacobro = "";
-        if ($item["DiaCobro"] != null || $item["DiaCobro"] != "") {
+        if ($item["DiaCobro"] != NULL || $item["DiaCobro"] != "") {
             $diacobro = date("d/m/Y", strtotime($item["DiaCobro"]));
         } else {
             $diacobro = "Sin Fecha";
         }
+ 
+        if (trim($btn1) != "" or trim($btn2) != "" or trim($btn3) != "" or trim($btn4) != "" or trim($btn5) != "" or trim($btn6) != "") { 
+            $btnOpciones = $btn1 . $btn2 . $btn3 . $btn4 . $btn5 . $btn6;
+        } 
 
         $arreglo = array(
             "Nombre" => $item["Nombre"],
@@ -370,29 +289,28 @@ class Clientes extends CI_Controller
             "DiaCobro" => $diacobro,
             "Estado" => $item["EstNombre"],
             "PaginaFisica" => $item["PaginaFisica"],
-            "btn" => '<div class="btn-group text-center" style="margin: 0px auto;  width:100%;">' . $btn1 . $btn2 . $btn3 . $btn4 . $btn5 . $btn6 . '</div>'
+            "btn" => '<div class="btn-group text-center" style="margin: 0px auto;  width:100%;">' . $btnOpciones . '</div>'
         );
 
         return $arreglo;
     }
 
-    public function Crear()
-    {
+    public function Crear() {
         $idPermiso = 88;
         $page = validarPermisoPagina($idPermiso);
 
         $dataTipDoc = $this->TiposDocumentos_model->obtenerTiposDocumentos();
-        if (isset($dataTipDoc) && $dataTipDoc != false) {
+        if (isset($dataTipDoc) && $dataTipDoc != FALSE) {
             $dataTiposVivienda = $this->Direcciones_model->obtenerTiposVivienda();
-            if (isset($dataTiposVivienda) && $dataTiposVivienda != false) {
+            if (isset($dataTiposVivienda) && $dataTiposVivienda != FALSE) {
                 $dataProductos = $this->Productos_model->obtenerProductos();
-                if (isset($dataProductos) && $dataProductos != false) {
+                if (isset($dataProductos) && $dataProductos != FALSE) {
                     $dataTarifas = $this->Tarifas_model->obtenerTarifas();
-                    if (isset($dataTarifas) && $dataTarifas != false) {
+                    if (isset($dataTarifas) && $dataTarifas != FALSE) {
                         $dataVendedores = $this->Vendedores_model->obtenerVendedores();
-                        if (isset($dataVendedores) && $dataVendedores != false) {
+                        if (isset($dataVendedores) && $dataVendedores != FALSE) {
                             $dataEventos = $this->Eventos_model->obtenerEventosIGLBARR();
-                            if (isset($dataEventos) && $dataEventos != false) {
+                            if (isset($dataEventos) && $dataEventos != FALSE) {
                                 $iglesias = array("");
                                 foreach ($dataEventos as $value) {
                                     array_push($iglesias, $value["Iglesia"]);
@@ -403,8 +321,6 @@ class Clientes extends CI_Controller
                                     array_push($barrios, $value["Barrio"]);
                                 }
                                 $barrios = array_unique($barrios);
-
-                                $usuariosAsignado = $this->Usuarios_model->obtenerUsuariosEP();
 
                                 $data = new stdClass();
                                 $data->Controller = "Clientes";
@@ -418,7 +334,6 @@ class Clientes extends CI_Controller
                                 $data->Lista6 = $dataVendedores;
                                 $data->Lista7 = json_encode($iglesias);
                                 $data->Lista8 = json_encode($barrios);
-                                $data->ListaUsuarios = $usuariosAsignado;
 
                                 $this->load->view('frontend', $data);
                             } else {
@@ -447,8 +362,7 @@ class Clientes extends CI_Controller
         }
     }
 
-    public function NewClient()
-    {
+    public function NewClient() {
         $idPermiso = 91;
         $page = validarPermisoAcciones($idPermiso);
         if ($page) {
@@ -481,7 +395,7 @@ class Clientes extends CI_Controller
             $cli_nomrf3 = ucwords(strtolower(trim($this->input->post('cli_nomrf3'))));
             $cli_telrf3 = trim($this->input->post('cli_telrf3'));
             $cli_paren3 = ucwords(strtolower(trim($this->input->post('cli_paren3'))));
-            //Productos Adquiridos
+            //Productos Adquiridos        
             $cli_cant1 = trim($this->input->post('cli_cant1'));
             $cli_prod1 = trim($this->input->post('cli_prod1'));
             $cli_val1 = trim($this->input->post('cli_val1'));
@@ -499,569 +413,519 @@ class Clientes extends CI_Controller
             $cli_abono = trim($this->input->post('cli_abono'));
             //Observaciones
             $cli_Ven = trim($this->input->post('cli_Ven'));
-            $cli_Usu = trim($this->input->post('cli_Usu'));
             $cli_IglEve = ucwords(strtolower(trim($this->input->post('cli_IglEve'))));
             $cli_BarEve = ucwords(strtolower(trim($this->input->post('cli_BarEve'))));
             $cli_FecEve = trim($this->input->post('cli_FecEve') . " 00:00:00");
             $cli_FecEve = preg_replace('#(\d{2})/(\d{2})/(\d{4})\s(.*)#', '$3-$2-$1 $4', $cli_FecEve);
             $cli_PagEve = trim($this->input->post('cli_PagEve'));
             $cli_Obs = ucfirst(strtolower(trim($this->input->post('cli_Obs'))));
-            //Valores Predeterminados
-            $cli_dirPre = 1;
-            $cli_hab = 1;
-            $num_cuo = 1;
-            $cli_est = 104;
-            $ped_est = 110;
+
             //Datos Auditoría
             $user = $this->session->userdata('Usuario');
             $fecha = date("Y-m-d H:i:s");
             $errores = 0;
-            $lblErrores = null;
-            
-            $dataClienteTemp = $this->Clientes_model->obtenerClienteDocLast($cli_doc);
-            // if ($dataClienteTemp) {
-            //     echo "El documento digitado ya está registrado. Al parecer el Cliente ya existe.";
-            //     return false;
-            // }
+            $lblErrores = "";
 
-            $lblErrores = $this->AddCliente($cli_nom, $cli_tipdoc, $cli_doc, $cli_dirPre, $cli_tel1, $cli_tel2, $cli_tel3, $cli_est, $cli_Obs, $cli_hab, $user, $fecha);
-            if ($lblErrores != null) {
-                echo $lblErrores;
-                return false;
-            }
-
-            $cli_cod = $this->session->flashdata("cli_cod");
-            if ($cli_cod == null) {
-                echo "No se pudo guardar el Cliente";
-                return false;
-            }
-
-            $lblErrores = $this->AddAddress($cli_cod, $cli_nom, $cli_dir, $cli_eta, $cli_tor, $cli_apto, $cli_manz, $cli_int, $cli_casa, $cli_bar, $cli_tipviv, $cli_hab, $user, $fecha);
-            if ($lblErrores != null) {
-                echo $lblErrores;
-                return false;
-            }
-            
-            $lblErrores = $this->AddReference($cli_cod, $cli_nom, $cli_nomrf1, $cli_telrf1, $cli_paren1, $cli_hab, $user, $fecha);
-            if ($lblErrores != null) {
-                echo $lblErrores;
-                return false;
-            }
-            
-            $lblErrores = $this->AddReference($cli_cod, $cli_nom, $cli_nomrf2, $cli_telrf2, $cli_paren2, $cli_hab, $user, $fecha);
-            if ($lblErrores != null) {
-                echo $lblErrores;
-                return false;
-            }
-            
-            $lblErrores = $this->AddReference($cli_cod, $cli_nom, $cli_nomrf3, $cli_telrf3, $cli_paren3, $cli_hab, $user, $fecha);
-            if ($lblErrores != null) {
-                echo $lblErrores;
-                return false;
-            }
-            
-            $lblErrores = $this->AddEvent($cli_cod, $cli_nom, $cli_Ven, $cli_IglEve, $cli_BarEve, $cli_FecEve, $cli_hab, $user, $fecha);
-            if ($lblErrores != null) {
-                echo $lblErrores;
-                return false;
-            }
-            $cli_Eve = $this->session->flashdata("cli_Eve");
-            
-            if ($cli_Eve == null) {
-                $cli_Eve = 101;
+            //Crear Clientes
+            $dataCliente = array(
+                "Nombre" => $cli_nom,
+                "TipoDocumento" => $cli_tipdoc,
+                "Documento" => $cli_doc,
+                "Direccion" => 1,
+                "Telefono1" => $cli_tel1,
+                "Telefono2" => $cli_tel2,
+                "Telefono3" => $cli_tel3,
+                "Estado" => 104,
+                "Observaciones" => $cli_Obs,
+                "Habilitado" => 1,
+                "UsuarioCreacion" => $user,
+                "FechaCreacion" => $fecha
+            );
+            //var_dump($dataCliente);
+            try {
+                if ($this->Clientes_model->save($dataCliente)) {
+                    $Cli = $this->Clientes_model->obtenerClienteDoc($cli_doc, "DESC");
+                    if ($Cli) {
+                        $dataCliente['Codigo'] = $Cli[0]['Codigo'];
+                        $modulo = "Creación Cliente";
+                        $tabla = "Clientes";
+                        $accion = "Crear Cliente";
+                        $llave = $Cli[0]['Codigo'];
+                        $sql = LogSave($dataCliente, $modulo, $tabla, $accion, $llave);
+                    } else {
+                        $errores++;
+                        $lblErrores = "No se pudo guardar, por favor intentelo de nuevo.";
+                    }
+                } else {
+                    $errores++;
+                    $lblErrores = "No se pudo guardar, por favor intentelo de nuevo.";
+                }
+            } catch (Exception $e) {
+                $errores++;
+                $lblErrores = 'Ha habido una excepción: ' . $e->getMessage() . "<br>";
             }
 
-            $lblErrores = $this->AddOrder($cli_cod, $cli_nom, $cli_totalPag, $cli_tar1, $cli_nomTar, $cli_priCobro, $ped_est, $cli_Eve, $cli_Ven, $cli_PagEve, $cli_numCuo, $cli_valCuo, $cli_hab, $user, $fecha);
-            if ($lblErrores != null) {
+
+            if ($errores > 0) {
                 echo $lblErrores;
-                return false;
-            }
+            } else {
+                //Crear Direccion
+                $dataDireccion = array(
+                    "Direccion" => $cli_dir,
+                    "Etapa" => $cli_eta,
+                    "Torre" => $cli_tor,
+                    "Apartamento " => $cli_apto,
+                    "Manzana" => $cli_manz,
+                    "Interior" => $cli_int,
+                    "Casa" => $cli_casa,
+                    "Barrio" => $cli_bar,
+                    "TipoVivienda" => $cli_tipviv,
+                    "Habilitado" => 1,
+                    "UsuarioCreacion" => $user,
+                    "FechaCreacion" => $fecha
+                );
 
-            $ped_cod = $this->session->flashdata("ped_cod");
-            if ($ped_cod == null) {
-                echo "No se pudo guardar el Pedido";
-                return false;
-            }
+                try {
+                    if ($this->Direcciones_model->save($dataDireccion)) {
+                        $dir = $this->Direcciones_model->obtenerDireccionPorDirUserFec($cli_dir, $user, $fecha);
+                        if ($dir) {
+                            $dataDireccion['Codigo'] = $dir[0]['Codigo'];
 
-            $lblErrores = $this->AddProduct($cli_cod, $cli_nom, $ped_cod, $cli_cant1, $cli_prod1, $cli_nomprod1, $cli_val1, $cli_hab, $user, $fecha);
-            if ($lblErrores != null) {
-                echo $lblErrores;
-                return false;
-            }
+                            $dataTemp = array(
+                                "Direccion" => $dataDireccion['Codigo']
+                            );
+                            $this->Clientes_model->update($Cli[0]['Codigo'], $dataTemp);
 
-            if ($cli_abono > 0 && $cli_abono != "") {
-                $lblErrores = $this->AddPayment($cli_cod, $cli_nom, $ped_cod, $num_cuo, $cli_abono, $cli_totalPag, $cli_hab, $user, $fecha);
-                if ($lblErrores != null) {
-                    echo $lblErrores;
-                    return false;
+                            $modulo = "Creación Cliente";
+                            $tabla = "Direcciones";
+                            $accion = "Crear Dirección";
+                            $llave = $Cli[0]['Codigo'];
+                            $sql = LogSave($dataDireccion, $modulo, $tabla, $accion, $llave);
+                        } else {
+                            $errores++;
+                            $lblErrores = "No se pudo guardar, por favor intentelo de nuevo.";
+                        }
+                    } else {
+                        $errores++;
+                        $lblErrores = "No se pudo guardar, por favor intentelo de nuevo.";
+                    }
+                } catch (Exception $e) {
+                    $errores++;
+                    $lblErrores = 'Ha habido una excepción: ' . $e->getMessage() . "<br>";
                 }
             }
-            
-            $nomUsuario = $this->Usuarios_model->obtenerUsuario($cli_Usu);
-            $lblErrores = $this->asignarClienteUsuario($cli_cod, $cli_nom, $cli_Usu, $nomUsuario[0]["Nombre"], $fecha);
-            if ($lblErrores != null) {
+
+            if ($errores > 0) {
                 echo $lblErrores;
-                return false;
+            } else {
+                //Crear Referencias 1
+                $dataReferencia1 = array(
+                    "Nombres" => $cli_nomrf1,
+                    "Telefono" => $cli_telrf1,
+                    "Parentesco" => $cli_paren1,
+                    "Habilitado" => 1,
+                    "UsuarioCreacion" => $user,
+                    "FechaCreacion" => $fecha
+                );
+
+                try {
+                    if ($this->Referencias_model->save($dataReferencia1)) {
+                        $Ref1 = $this->Referencias_model->obtenerReferenciasCodUserFec($cli_nomrf1, $user, $fecha);
+                        if ($Ref1) {
+                            $dataReferencia1['Codigo'] = $Ref1[0]['Codigo'];
+                            $modulo = "Creación Cliente";
+                            $tabla = "Referencias";
+                            $accion = "Crear Referencia";
+                            $llave = $Cli[0]['Codigo'];
+                            $sql = LogSave($dataReferencia1, $modulo, $tabla, $accion, $llave);
+
+                            $dataRefCliente1 = array(
+                                "Cliente" => $Cli[0]['Codigo'],
+                                "Referencia" => $Ref1[0]['Codigo'],
+                                "Habilitado" => 1,
+                                "UsuarioCreacion" => $user,
+                                "FechaCreacion" => $fecha
+                            );
+
+                            if ($this->Referencias_model->saveRefCli($dataRefCliente1)) {
+                                $RefCli1 = $this->Referencias_model->obtenerRefClienteCodUserFec($Cli[0]['Codigo'], $Ref1[0]['Codigo'], $user, $fecha);
+                                if ($RefCli1) {
+                                    $dataRefCliente1['Codigo'] = $RefCli1[0]['Codigo'];
+                                    $modulo = "Creación Cliente";
+                                    $tabla = "ReferenciasCliente";
+                                    $accion = "Vincular Cliente y Referencia";
+                                    $llave = $Cli[0]['Codigo'];
+                                    $sql = LogSave($dataRefCliente1, $modulo, $tabla, $accion, $llave);
+                                } else {
+                                    $errores++;
+                                    $lblErrores = "No se pudo guardar, por favor intentelo de nuevo.";
+                                }
+                            } else {
+                                $errores++;
+                                $lblErrores = "No se pudo guardar, por favor intentelo de nuevo.";
+                            }
+                        } else {
+                            $errores++;
+                            $lblErrores = "No se pudo guardar, por favor intentelo de nuevo.";
+                        }
+                    } else {
+                        $errores++;
+                        $lblErrores = "No se pudo guardar, por favor intentelo de nuevo.";
+                    }
+                } catch (Exception $e) {
+                    $errores++;
+                    $lblErrores = 'Ha habido una excepción: ' . $e->getMessage() . "<br>";
+                }
             }
-            
-            echo "1";
+
+            if ($errores > 0) {
+                echo $lblErrores;
+            } else {
+                //Crear Referencias 2
+                $dataReferencia2 = array(
+                    "Nombres" => $cli_nomrf2,
+                    "Telefono" => $cli_telrf2,
+                    "Parentesco" => $cli_paren2,
+                    "Habilitado" => 1,
+                    "UsuarioCreacion" => $user,
+                    "FechaCreacion" => $fecha
+                );
+
+                try {
+                    if ($this->Referencias_model->save($dataReferencia2)) {
+                        $Ref2 = $this->Referencias_model->obtenerReferenciasCodUserFec($cli_nomrf2, $user, $fecha);
+                        if ($Ref2) {
+                            $dataReferencia2['Codigo'] = $Ref2[0]['Codigo'];
+                            $modulo = "Creación Cliente";
+                            $tabla = "Referencias";
+                            $accion = "Crear Referencia";
+                            $llave = $Cli[0]['Codigo'];
+                            $sql = LogSave($dataReferencia2, $modulo, $tabla, $accion, $llave);
+
+                            $dataRefCliente2 = array(
+                                "Cliente" => $Cli[0]['Codigo'],
+                                "Referencia" => $Ref2[0]['Codigo'],
+                                "Habilitado" => 1,
+                                "UsuarioCreacion" => $user,
+                                "FechaCreacion" => $fecha
+                            );
+
+                            if ($this->Referencias_model->saveRefCli($dataRefCliente2)) {
+                                $RefCli2 = $this->Referencias_model->obtenerRefClienteCodUserFec($Cli[0]['Codigo'], $Ref2[0]['Codigo'], $user, $fecha);
+                                if ($RefCli2) {
+                                    $dataRefCliente2['Codigo'] = $RefCli2[0]['Codigo'];
+                                    $modulo = "Creación Cliente";
+                                    $tabla = "ReferenciasCliente";
+                                    $accion = "Vincular Cliente y Referencia";
+                                    $llave = $Cli[0]['Codigo'];
+                                    $sql = LogSave($dataRefCliente2, $modulo, $tabla, $accion, $llave);
+                                } else {
+                                    $errores++;
+                                    $lblErrores = "No se pudo guardar, por favor intentelo de nuevo.";
+                                }
+                            } else {
+                                $errores++;
+                                $lblErrores = "No se pudo guardar, por favor intentelo de nuevo.";
+                            }
+                        } else {
+                            $errores++;
+                            $lblErrores = "No se pudo guardar, por favor intentelo de nuevo.";
+                        }
+                    } else {
+                        $errores++;
+                        $lblErrores = "No se pudo guardar, por favor intentelo de nuevo.";
+                    }
+                } catch (Exception $e) {
+                    $errores++;
+                    $lblErrores = 'Ha habido una excepción: ' . $e->getMessage() . "<br>";
+                }
+            }
+
+            if ($errores > 0) {
+                echo $lblErrores;
+            } else {
+                if ($cli_nomrf3 != "") {
+                    //Crear Referencias 3
+                    $dataReferencia3 = array(
+                        "Nombres" => $cli_nomrf3,
+                        "Telefono" => $cli_telrf3,
+                        "Parentesco" => $cli_paren3,
+                        "Habilitado" => 1,
+                        "UsuarioCreacion" => $user,
+                        "FechaCreacion" => $fecha
+                    );
+
+                    try {
+                        if ($this->Referencias_model->save($dataReferencia3)) {
+                            $Ref3 = $this->Referencias_model->obtenerReferenciasCodUserFec($cli_nomrf3, $user, $fecha);
+                            if ($Ref3) {
+                                $dataReferencia3['Codigo'] = $Ref3[0]['Codigo'];
+                                $modulo = "Creación Cliente";
+                                $tabla = "Referencias";
+                                $accion = "Crear Referencia";
+                                $llave = $Cli[0]['Codigo'];
+                                $sql = LogSave($dataReferencia3, $modulo, $tabla, $accion, $llave);
+
+                                $dataRefCliente3 = array(
+                                    "Cliente" => $Cli[0]['Codigo'],
+                                    "Referencia" => $Ref3[0]['Codigo'],
+                                    "Habilitado" => 1,
+                                    "UsuarioCreacion" => $user,
+                                    "FechaCreacion" => $fecha
+                                );
+
+                                if ($this->Referencias_model->saveRefCli($dataRefCliente3)) {
+                                    $RefCli3 = $this->Referencias_model->obtenerRefClienteCodUserFec($Cli[0]['Codigo'], $Ref3[0]['Codigo'], $user, $fecha);
+                                    if ($RefCli3) {
+                                        $dataRefCliente3['Codigo'] = $RefCli3[0]['Codigo'];
+                                        $modulo = "Creación Cliente";
+                                        $tabla = "ReferenciasCliente";
+                                        $accion = "Vincular Cliente y Referencia";
+                                        $llave = $Cli[0]['Codigo'];
+                                        $sql = LogSave($dataRefCliente3, $modulo, $tabla, $accion, $llave);
+                                    } else {
+                                        $errores++;
+                                        $lblErrores = "No se pudo guardar, por favor intentelo de nuevo.";
+                                    }
+                                } else {
+                                    $errores++;
+                                    $lblErrores = "No se pudo guardar, por favor intentelo de nuevo.";
+                                }
+                            } else {
+                                $errores++;
+                                $lblErrores = "No se pudo guardar, por favor intentelo de nuevo.";
+                            }
+                        } else {
+                            $errores++;
+                            $lblErrores = "No se pudo guardar, por favor intentelo de nuevo.";
+                        }
+                    } catch (Exception $e) {
+                        $errores++;
+                        $lblErrores = 'Ha habido una excepción: ' . $e->getMessage() . "<br>";
+                    }
+                }
+            }
+
+            if ($errores > 0) {
+                echo $lblErrores;
+            } else {
+                //Validar Evento
+                $cli_Eve = 101;
+                $evento = $this->Eventos_model->obtenerEventoVendIglBarFec($cli_Ven, $cli_IglEve, $cli_BarEve, $cli_FecEve);
+                if (isset($evento) && $evento != FALSE) {
+                    $cli_Eve = $evento[0]["Codigo"];
+                } else {
+                    $evento = array(
+                        "Vendedor" => $cli_Ven,
+                        "Iglesia" => $cli_IglEve,
+                        "Barrio" => $cli_BarEve,
+                        "Fecha" => $cli_FecEve,
+                        "Habilitado" => 1,
+                        "UsuarioCreacion" => $user,
+                        "FechaCreacion" => $fecha
+                    );
+                    if ($this->Eventos_model->save($evento)) {
+                        $dataEvento = $this->Eventos_model->obtenerEventoVendIglBarFec($cli_Ven, $cli_IglEve, $cli_BarEve, $cli_FecEve);
+                        $cli_Eve = $dataEvento[0]["Codigo"];
+                        $evento['Codigo'] = $dataEvento[0]["Codigo"];
+                        $modulo = "Creación Cliente";
+                        $tabla = "Eventos";
+                        $accion = "Crear evento";
+                        $llave = $Cli[0]['Codigo'];
+                        $sql = LogSave($evento, $modulo, $tabla, $accion, $llave);
+                    }
+                }
+
+                //Crear Pedido
+                $dataPedido = array(
+                    "Cliente" => $Cli[0]['Codigo'],
+                    "Valor" => $cli_totalPag,
+                    "Tarifa" => $cli_tar1,
+                    "DiaCobro" => $cli_priCobro,
+                    "Estado" => 110,
+                    "Evento" => $cli_Eve,
+                    "Vendedor" => $cli_Ven,
+                    "FechaPedido" => $fecha,
+                    "Saldo" => $cli_totalPag,
+                    "PaginaFisica" => $cli_PagEve,
+                    "Observaciones" => "Se crea Pedido desde el módulo de Clientes. \nCliente: " . $cli_nom . "\nTarifa Aplicada: " . $cli_nomTar
+                    . "\nTotal a Pagar: " . money_format("%.0n", $cli_totalPag) . "\nCuotas: " . $cli_numCuo
+                    . "\nValor Cuotas: " . money_format("%.0n", $cli_valCuo) . "\nPrimer Pago: " . $cli_priCobro . "\n "
+                    . "\nObservación automática.",
+                    "Habilitado" => 1,
+                    "UsuarioCreacion" => $user,
+                    "FechaCreacion" => $fecha
+                );
+
+                try {
+                    if ($this->Pedidos_model->save($dataPedido)) {
+                        $ped = $this->Pedidos_model->obtenerPedidoCliValUserFec($Cli[0]['Codigo'], $cli_priCobro, $user, $fecha);
+                        if ($ped) {
+                            $dataPedido['Codigo'] = $ped[0]['Codigo'];
+                            $modulo = "Creación Cliente";
+                            $tabla = "Pedidos";
+                            $accion = "Crear Pedido";
+                            $llave = $Cli[0]['Codigo'];
+                            $sql = LogSave($dataPedido, $modulo, $tabla, $accion, $llave);
+                        } else {
+                            $errores++;
+                            $lblErrores = "No se pudo guardar, por favor intentelo de nuevo.";
+                        }
+                    } else {
+                        $errores++;
+                        $lblErrores = "No se pudo guardar, por favor intentelo de nuevo.";
+                    }
+                } catch (Exception $e) {
+                    $errores++;
+                    $lblErrores = 'Ha habido una excepción: ' . $e->getMessage() . "<br>";
+                }
+            }
+
+            if ($errores > 0) {
+                echo $lblErrores;
+            } else {
+                //Crear ProductosPedido
+                $dataPedidoPro1 = array(
+                    "Pedido" => $ped[0]['Codigo'],
+                    "Cantidad" => $cli_cant1,
+                    "Producto" => $cli_prod1,
+                    "Valor" => $cli_val1,
+                    "Habilitado" => 1,
+                    "UsuarioCreacion" => $user,
+                    "FechaCreacion" => $fecha
+                );
+
+                try {
+                    if ($this->Pedidos_model->saveProPed($dataPedidoPro1)) {
+                        $pedPro1 = $this->Pedidos_model->obtenerPedidoProUserFec($ped[0]['Codigo'], $cli_prod1, $user, $fecha);
+                        if ($pedPro1) {
+                            $dataPedidoPro1['Codigo'] = $pedPro1[0]['Codigo'];
+                            $dataPedidoPro1['Observaciones'] = "Se vincula el producto: " . $cli_nomprod1 . " al Pedido " . $pedPro1[0]['Codigo']
+                                    . " del Cliente " . $cli_nom . ". \n"
+                                    . "Cantidad del Producto: " . $cli_cant1 . ". \n"
+                                    . "Valor del Producto: " . money_format("%.0n", $cli_prod1) . ". \n"
+                                    . "\nObservación automática.";
+                            $modulo = "Creación Cliente";
+                            $tabla = "ProductosPedidos";
+                            $accion = "Vincular Productos y Pedido";
+                            $llave = $Cli[0]['Codigo'];
+                            $sql = LogSave($dataPedidoPro1, $modulo, $tabla, $accion, $llave);
+                        } else {
+                            $errores++;
+                            $lblErrores = "No se pudo guardar, por favor intentelo de nuevo.";
+                        }
+                    } else {
+                        $errores++;
+                        $lblErrores = "No se pudo guardar, por favor intentelo de nuevo.";
+                    }
+                } catch (Exception $e) {
+                    $errores++;
+                    $lblErrores = 'Ha habido una excepción: ' . $e->getMessage() . "<br>";
+                }
+            }
+
+            if ($errores > 0) {
+                echo $lblErrores;
+            } else {
+                if ($cli_abono > 0 && $cli_abono != "") {
+                    //Si hay abono
+                    $saldo = (intval($cli_totalPag) - intval($cli_abono));
+                    $dataAbono = array(
+                        "Cliente" => $Cli[0]['Codigo'],
+                        "Pedido" => $ped[0]['Codigo'],
+                        "Cuota" => 1,
+                        "Pago" => $cli_abono,
+                        "FechaPago" => $fecha,
+                        "TotalPago" => $cli_totalPag,
+                        "Observaciones" => "Abono por valor de: " . money_format("%.0n", $cli_abono) . "\n"
+                        . "Abono realizado al momento del pedido.\n"
+                        . "Saldo Actual: " . money_format("%.0n", ($saldo))
+                        . "\nObservación automática.",
+                        "Habilitado" => 1,
+                        "UsuarioCreacion" => $user,
+                        "FechaCreacion" => $fecha
+                    );
+
+                    try {
+                        if ($this->Pagos_model->save($dataAbono)) {
+                            $dataActPedido = array(
+                                "Saldo" => (intval($cli_totalPag) - intval($cli_abono)),
+                                "Estado" => 111,
+                                "FechaUltimoPago" => $fecha,
+                                "UsuarioModificacion" => $user,
+                                "FechaModificacion" => $fecha
+                            );
+                            if ($this->Pedidos_model->update($ped[0]['Codigo'], $dataActPedido)) {
+                                $abono = $this->Pagos_model->obtenerPagosPedidoUserFec($Cli[0]['Codigo'], $ped[0]['Codigo'], $user, $fecha);
+                                if ($abono) {
+                                    $dataAbono['Codigo'] = $abono[0]['Codigo'];
+                                    $modulo = "Pagar Pedido";
+                                    $tabla = "Pagos";
+                                    $accion = "Crear Abono";
+                                    $llave = $ped[0]['Codigo'];
+                                    //Se Crea Historial Pago
+                                    $this->History($Cli[0]['Codigo'], $ped[0]['Codigo'], $fecha, $user, "Primer Abono", intval($cli_totalPag), 1, (intval($cli_totalPag) - intval($cli_abono)), intval($cli_abono), $dataAbono["Observaciones"]);
+                                    $sql = LogSave($dataAbono, $modulo, $tabla, $accion, $llave);
+                                } else {
+                                    $errores++;
+                                    $lblErrores = "No se pudo guardar, por favor intentelo de nuevo.";
+                                }
+                            } else {
+                                $errores++;
+                                $lblErrores = "No se pudo guardar, por favor intentelo de nuevo.";
+                            }
+                        } else {
+                            $errores++;
+                            $lblErrores = "No se pudo guardar, por favor intentelo de nuevo.";
+                        }
+                        $this->asignarClienteUsuario($this->session->userdata('Codigo'), $Cli[0]['Codigo']);
+                    } catch (Exception $e) {
+                        $errores++;
+                        $lblErrores = 'Ha habido una excepción: ' . $e->getMessage() . "<br>";
+                    }
+                }
+            }
+            $this->asignarClienteUsuario($this->session->userdata('Codigo'), $Cli[0]['Codigo']);
+            if ($errores > 0) {
+                echo $lblErrores;
+            } else {
+                echo 1;
+            }
         } else {
             echo "No tiene permisos para Crear un Cliente/Pedido";
         }
     }
 
-    public function AddCliente($cli_nom, $cli_tipdoc, $cli_doc, $cli_dir, $cli_tel1, $cli_tel2, $cli_tel3, $cli_est, $cli_Obs, $cli_hab, $user, $fecha)
-    {
-        $lblErrores = null;
-        $dataCliente = array(
-            "Nombre" => $cli_nom,
-            "TipoDocumento" => $cli_tipdoc,
-            "Documento" => $cli_doc,
-            "Direccion" => $cli_dir,
-            "Telefono1" => $cli_tel1,
-            "Telefono2" => $cli_tel2,
-            "Telefono3" => $cli_tel3,
-            "Estado" => $cli_est,
-            "Observaciones" => $cli_Obs,
-            "Habilitado" => $cli_hab,
-            "UsuarioCreacion" => $user,
-            "FechaCreacion" => $fecha
-        );
-        
-        try {
-            if ($this->Clientes_model->save($dataCliente)) {
-                $Cli = $this->Clientes_model->obtenerClienteDoc($cli_doc, "DESC"); 
-                if ($Cli) {
-                    $modulo = "Crear Cliente";
-                    $accion = "Creación Cliente '" . $cli_nom."'";
-                    $tabla = "Clientes";
-                    $llave = $Cli[0]['Codigo'];
-                    $cliente_log = $Cli[0]['Codigo'];
-                    $enlace = "Clientes|Consultar|" . $llave;
-                    $dataInsert = $dataCliente;
-                    $observaciones = "";
-                    $this->session->set_flashdata("cli_cod", $llave);
-                    insertLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataInsert, $observaciones);
-                } else {
-                    $lblErrores = "No se pudo guardar, por favor intentelo de nuevo. Cliente.";
-                }
-            } else {
-                $lblErrores = "No se pudo guardar, por favor intentelo de nuevo. Cliente.";
-            }
-        } catch (Exception $e) {
-            $lblErrores = 'Ha habido una excepción: ' . $e->getMessage() . "<br>Cliente.";
-        }
-        
-        return $lblErrores;
-    }
-
-    public function AddAddress($cli_cod, $cli_nom, $cli_dir, $cli_eta, $cli_tor, $cli_apto, $cli_manz, $cli_int, $cli_casa, $cli_bar, $cli_tipviv, $cli_hab, $user, $fecha)
-    {
-        $lblErrores = null;
-        $dataDireccion = array(
-            "Direccion" => $cli_dir,
-            "Etapa" => $cli_eta,
-            "Torre" => $cli_tor,
-            "Apartamento " => $cli_apto,
-            "Manzana" => $cli_manz,
-            "Interior" => $cli_int,
-            "Casa" => $cli_casa,
-            "Barrio" => $cli_bar,
-            "TipoVivienda" => $cli_tipviv,
-            "Habilitado" => $cli_hab,
-            "UsuarioCreacion" => $user,
-            "FechaCreacion" => $fecha
-        );
-
-        try {
-            if ($this->Direcciones_model->save($dataDireccion)) {
-                $dir = $this->Direcciones_model->obtenerDireccionPorDirUserFec($cli_dir, $user, $fecha);
-                if ($dir) {
-                    $dataCliente = $this->Clientes_model->obtenerCliente($cli_cod);
-
-                    $modulo = "Crear Cliente";
-                    $accion = "Creación Dirección '" . $cli_dir."'";
-                    $tabla = "Direcciones";
-                    $llave = $dir[0]['Codigo'];
-                    $cliente_log = $cli_cod;
-                    $enlace = "Clientes|Consultar|" . $cli_cod;
-                    $dataInsert = $dataDireccion;
-                    $observaciones = "";
-                    insertLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataInsert, $observaciones);
-                    
-                    $dataTemp = array(
-                        "Direccion" => $llave
-                    );
-                    
-                    $dataOriginal = $dataCliente[0];
-                    $dataNew = compararCambiosLog($dataOriginal, $dataTemp);
-                    $this->Clientes_model->update($cli_cod, $dataNew);
-                    $modulo = "Crear Cliente";
-                    $accion = "Actualización Cliente '" . $cli_nom."'";
-                    $tabla = "Clientes";
-                    $llave = $cli_cod;
-                    $cliente_log = $cli_cod;
-                    $enlace = "Clientes|Consultar|" . $cli_cod;
-                    $observaciones = "Actualización de Dirección después de la creación";
-                    updateLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataOriginal, $dataNew, $observaciones);
-                } else {
-                    $lblErrores = "No se pudo guardar, por favor intentelo de nuevo. Dirección.";
-                }
-            } else {
-                $lblErrores = "No se pudo guardar, por favor intentelo de nuevo. Dirección.";
-            }
-        } catch (Exception $e) {
-            $lblErrores = 'Ha habido una excepción: ' . $e->getMessage() . "<br>Dirección.";
-        }
-        
-        return $lblErrores;
-    }
-
-    public function AddReference($cli_cod, $cli_nom, $cli_nomrf, $cli_telrf, $cli_paren, $cli_hab, $user, $fecha)
-    {
-        $lblErrores = null;
-        if ($cli_nomrf != "" && $cli_telrf != "" && $cli_paren != "") {
-            $dataReferencia = array(
-                "Nombres" => $cli_nomrf,
-                "Telefono" => $cli_telrf,
-                "Parentesco" => $cli_paren,
-                "Habilitado" => 1,
-                "UsuarioCreacion" => $user,
-                "FechaCreacion" => $fecha
-            );
-
-            try {
-                if ($this->Referencias_model->save($dataReferencia)) {
-                    $Ref = $this->Referencias_model->obtenerReferenciasCodUserFec($cli_nomrf, $user, $fecha);
-                    if ($Ref) {
-                        $llave = $Ref[0]['Codigo'];
-                        $dataRefCliente = array(
-                            "Cliente" => $cli_cod,
-                            "Referencia" => $llave,
-                            "Habilitado" => $cli_hab,
-                            "UsuarioCreacion" => $user,
-                            "FechaCreacion" => $fecha
-                        );
-
-                        if ($this->Referencias_model->saveRefCli($dataRefCliente)) {
-                            $RefCli = $this->Referencias_model->obtenerRefClienteCodUserFec($cli_cod, $llave, $user, $fecha, "DESC");
-                            if ($RefCli) {
-                                $modulo = "Crear Cliente";
-                                $accion = "Creación Referencia '" . $cli_nomrf . "' del Cliente '" . $cli_nom . "'";
-                                $tabla = "Referencias";
-                                $cliente_log = $cli_cod;
-                                $enlace = "Clientes|Consultar|" . $cli_cod;
-                                $observaciones = "Se enlaza Referencia al Cliente después de Crearse";
-                                $dataInsert = $dataReferencia;
-                                insertLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataInsert, $observaciones);
-                            } else {
-                                $lblErrores = "No se pudo guardar, por favor intentelo de nuevo. Referencia.";
-                            }
-                        } else {
-                            $lblErrores = "No se pudo guardar, por favor intentelo de nuevo. Referencia.";
-                        }
-                    } else {
-                        $lblErrores = "No se pudo guardar, por favor intentelo de nuevo. Referencia.";
-                    }
-                } else {
-                    $lblErrores = "No se pudo guardar, por favor intentelo de nuevo. Referencia.";
-                }
-            } catch (Exception $e) {
-                $errores++;
-                $lblErrores = 'Ha habido una excepción: ' . $e->getMessage() . "<br>Referencia.";
-            }
-        }
-    }
-
-    public function AddEvent($cli_cod, $cli_nom, $cli_Ven, $cli_IglEve, $cli_BarEve, $cli_FecEve, $cli_hab, $user, $fecha)
-    {
-        $lblErrores = null;
-
-        try {
-            $evento = $this->Eventos_model->obtenerEventoVendIglBarFec($cli_Ven, $cli_IglEve, $cli_BarEve, $cli_FecEve);
-            if (isset($evento) && $evento != false) {
-                $cli_Eve = $evento[0]["Codigo"];
-                $this->session->set_flashdata("cli_Eve", $cli_Eve);
-            } else {
-                $evento = array(
-                    "Vendedor" => $cli_Ven,
-                    "Iglesia" => $cli_IglEve,
-                    "Barrio" => $cli_BarEve,
-                    "Fecha" => $cli_FecEve,
-                    "Habilitado" => $cli_hab,
-                    "UsuarioCreacion" => $user,
-                    "FechaCreacion" => $fecha
-                );
-
-                if ($this->Eventos_model->save($evento)) {
-                    $dataEvento = $this->Eventos_model->obtenerEventoVendIglBarFec($cli_Ven, $cli_IglEve, $cli_BarEve, $cli_FecEve);
-                    if ($dataEvento) {
-                        $modulo = "Crear Cliente";
-                        $accion = "Creación Evento en la Iglesia '" . $cli_IglEve."'";
-                        $tabla = "Eventos";
-                        $llave = $dataEvento[0]["Codigo"];
-                        $cliente_log = $cli_cod;
-                        $enlace = "Clientes|Consultar|" . $cli_cod;
-                        $dataInsert = $evento;
-                        $observaciones = "Creación Evento en la Iglesia '" . $cli_IglEve."' en el barrio '" . $cli_BarEve . "'. Vendedor: '" . $cli_Ven . "'";
-                        $this->session->set_flashdata("cli_Eve", $llave);
-                        insertLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataInsert, $observaciones);
-                    }
-                }
-            }
-        } catch (Exception $e) {
-            $lblErrores = 'Ha habido una excepción: ' . $e->getMessage() . "<br>Evento.";
-        }
-    }
-
-    public function AddOrder($cli_cod, $cli_nom, $cli_totalPag, $cli_tar1, $cli_nomTar, $cli_priCobro, $ped_est, $cli_Eve, $cli_Ven, $cli_PagEve, $cli_numCuo, $cli_valCuo, $cli_hab, $user, $fecha)
-    {
-        $lblErrores = null;
-        $observacion = "Se crea Pedido desde el módulo de Clientes. \nCliente: " . $cli_nom . "\nTarifa Aplicada: " . $cli_nomTar
-        . "\nTotal a Pagar: " . money_format("%.0n", $cli_totalPag) . "\nCuotas: " . $cli_numCuo
-        . "\nValor Cuotas: " . money_format("%.0n", $cli_valCuo) . "\nPrimer Pago: " . $cli_priCobro . "\n "
-        . "\nObservación automática.";
-
-        $dataPedido = array(
-            "Codigo" => $cli_cod,
-            "Cliente" => $cli_cod,
-            "Valor" => $cli_totalPag,
-            "Tarifa" => $cli_tar1,
-            "DiaCobro" => $cli_priCobro,
-            "Estado" => $ped_est,
-            "Evento" => $cli_Eve,
-            "Vendedor" => $cli_Ven,
-            "FechaPedido" => $fecha,
-            "Saldo" => $cli_totalPag,
-            "PaginaFisica" => $cli_PagEve,
-            "Habilitado" => $cli_hab,
-            "UsuarioCreacion" => $user,
-            "FechaCreacion" => $fecha
-        );
-
-
-        try {
-            if ($this->Pedidos_model->save($dataPedido)) {
-                $ped = $this->Pedidos_model->obtenerPedido($cli_cod);
-                if ($ped) {
-                    $modulo = "Crear Cliente";
-                    $accion = "Creación Pedido al Cliente '" . $cli_nom."'";
-                    $tabla = "Pedidos";
-                    $llave = $cli_cod;
-                    $cliente_log = $cli_cod;
-                    $enlace = "Clientes|Consultar|" . $cli_cod;
-                    $dataInsert = $dataPedido;
-                    $observaciones = $observacion;
-                    $this->session->set_flashdata("ped_cod", $llave);
-                    insertLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataInsert, $observaciones);
-                } else {
-                    $lblErrores = "No se pudo guardar, por favor intentelo de nuevo. Pedido.";
-                }
-            } else {
-                $lblErrores = "No se pudo guardar, por favor intentelo de nuevo. Pedido.";
-            }
-        } catch (Exception $e) {
-            $lblErrores = 'Ha habido una excepción: ' . $e->getMessage() . "<br>Pedido.";
-        }
-        
-        return $lblErrores;
-    }
-
-    public function AddProduct($cli_cod, $cli_nom, $ped_cod, $cli_cant1, $cli_prod1, $cli_nomprod1, $cli_val1, $cli_hab, $user, $fecha)
-    {
-        $lblErrores = null;
-        $dataPedidoPro1 = array(
-            "Pedido" => $ped_cod,
-            "Cantidad" => $cli_cant1,
-            "Producto" => $cli_prod1,
-            "Valor" => $cli_val1,
-            "Habilitado" => $cli_hab,
-            "UsuarioCreacion" => $user,
-            "FechaCreacion" => $fecha
-        );
-
-        try {
-            if ($this->Pedidos_model->saveProPed($dataPedidoPro1)) {
-                $pedPro1 = $this->Pedidos_model->obtenerPedidoProUserFec($ped_cod, $cli_prod1, $user, $fecha);
-                if ($pedPro1) {
-                    $modulo = "Crear Cliente";
-                    $accion = "Agregar Producto al Pedido del Cliente '" . $cli_nom."'";
-                    $tabla = "ProductosPedidos";
-                    $llave = $ped_cod;
-                    $cliente_log = $cli_cod;
-                    $enlace = "Clientes|Productos|" . $ped_cod;
-                    $dataInsert = $dataPedidoPro1;
-                    $observaciones = "Se vincula el producto: " . $cli_nomprod1 . " al Pedido " . $ped_cod . " del Cliente " . $cli_nom . ". \n"
-                    . "Cantidad del Producto: " . $cli_cant1 . ". \nValor del Producto: " . money_format("%.0n", $cli_val1) . ". \n\nObservación automática.";
-                    insertLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataInsert, $observaciones);
-                } else {
-                    $lblErrores = "No se pudo guardar, por favor intentelo de nuevo. Producto del Pedido.";
-                }
-            } else {
-                $lblErrores = "No se pudo guardar, por favor intentelo de nuevo. Producto del Pedido.";
-            }
-        } catch (Exception $e) {
-            $lblErrores = 'Ha habido una excepción: ' . $e->getMessage() . "<br>Producto del Pedido.";
-        }
-        
-        return $lblErrores;
-    }
-
-    public function AddPayment($cli_cod, $cli_nom, $ped_cod, $num_cuo, $cli_abono, $cli_totalPag, $cli_hab, $user, $fecha)
-    {
-        $lblErrores = null;
-        //Si hay abono
-        $saldo = (intval($cli_totalPag) - intval($cli_abono));
-        $dataAbono = array(
-            "Cliente" => $cli_cod,
-            "Pedido" => $ped_cod,
-            "Cuota" => $num_cuo,
-            "Pago" => $cli_abono,
-            "FechaPago" => $fecha,
-            "TotalPago" => $cli_totalPag,
-            "Observaciones" => "Abono por valor de: " . money_format("%.0n", $cli_abono) . "\nAbono realizado al momento del pedido.\n"
-            . "Saldo Actual: " . money_format("%.0n", ($saldo)) . "\nObservación automática.",
-            "Habilitado" => $cli_hab,
-            "UsuarioCreacion" => $user,
-            "FechaCreacion" => $fecha
-        );
-
-        try {
-            if ($this->Pagos_model->save($dataAbono)) {
-                $abono = $this->Pagos_model->obtenerPagosPedidoUserFec($cli_cod, $ped_cod, $user, $fecha);
-                $modulo = "Crear Cliente";
-                $accion = "Abono del Cliente '" . $cli_nom."'";
-                $tabla = "Pagos";
-                $llave = $abono[0]['Codigo'];
-                $cliente_log = $cli_cod;
-                $enlace = "Pagos|Cliente|" . $cli_cod;
-                $dataInsert = $dataAbono;
-                $observaciones = "Primer Abono del Cliente, por un valor de " . money_format("%.0n", $cli_abono) . ". Pago automático.";
-                insertLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataInsert, $observaciones);
-                $this->History($cli_cod, $ped_cod, $fecha, $user, "Primer Abono", intval($cli_totalPag), 1, intval($saldo), intval($cli_abono), $dataAbono["Observaciones"]);
-        
-                $estado = 111;
-                if ($saldo <= 0) {
-                    $estado = 114;
-                }
-
-                $dataActPedido = array(
-                    "Saldo" => $saldo,
-                    "Estado" => $estado,
-                    "FechaUltimoPago" => $fecha,
-                    "UsuarioModificacion" => $user,
-                    "FechaModificacion" => $fecha
-                );
-                
-                $dataPedido = $this->Pedidos_model->obtenerPedido($ped_cod);
-                $dataOriginal = $dataPedido[0];
-                $dataNew = compararCambiosLog($dataOriginal, $dataActPedido);
-                $this->Pedidos_model->update($ped_cod, $dataNew);
-                $modulo = "Crear Cliente";
-                $accion = "Actualización Pedido del Cliente '" . $cli_nom."'";
-                $tabla = "Pedidos";
-                $llave = $ped_cod;
-                $cliente_log = $cli_cod;
-                $enlace = "Clientes|Consultar|" . $cli_cod;
-                $observaciones = "Actualización de Saldo después del primer abono";
-                updateLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataOriginal, $dataNew, $observaciones);
-                
-                if ($saldo <= 0) {
-                    //echo $saldo . "<br><br>";
-                    $dataActCliente = array(
-                        "Estado" => 123,
-                        "Observaciones" => "Estado: Paz y Salvo\n---\nCliente queda a Paz y Salvo por Saldo en $ 0\n \nObservación automática.",
-                        "UsuarioModificacion" => $user,
-                        "FechaModificacion" => $fecha
-                    );
-                    
-                    $dataTemp = $this->Clientes_model->obtenerClienteCampos($cli_cod, "Estado, Observaciones, UsuarioModificacion, FechaModificacion");
-                    $dataOriginal = $dataTemp[0];
-                    $dataNew = compararCambiosLog($dataOriginal, $dataActCliente);
-                    $this->Clientes_model->update($cli_cod, $dataNew);
-                    if (count($dataNew) > 2) {
-                        $modulo = "Crear Cliente";
-                        $accion = "Actualización del Cliente '" . $cli_nom."'";
-                        $tabla = "Clientes";
-                        $llave = $cli_cod;
-                        $cliente_log = $cli_cod;
-                        $enlace = "Clientes|Consultar|" . $cli_cod;
-                        $observaciones = "Actualización de Estado a Paz y Salvo";
-                        updateLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataOriginal, $dataNew, $observaciones);
-                    }
-                }
-            } else {
-                $lblErrores = "No se pudo guardar, por favor intentelo de nuevo. Primer Abono.";
-            }
-        } catch (Exception $e) {
-            $lblErrores = 'Ha habido una excepción: ' . $e->getMessage() . "<br>Primer Abono.";
-        }
-        
-        return $lblErrores;
-    }
-
-    public function asignarClienteUsuario($cli_cod, $cli_nom, $usuario, $nomUsuario, $fecha)
-    {
-        $lblErrores = null;
+    public function asignarClienteUsuario($usuario, $cliente) {
         //Datos Auditoría
         $user = $this->session->userdata('Usuario');
+        $fecha = date("Y-m-d H:i:s");
 
-        try {
-            $cliUsu = $this->Clientes_model->getClienteUsuario($cli_cod);
-            
-            $modulo = "Asignar Clientes";
-            $accion = "Asignacion del Cliente '" . $cli_nom."'";
-            $tabla = "ClientesUsuarios";
-            $llave = $cli_cod;
-            $cliente_log = $cli_cod;
-            $enlace = "Clientes|Consultar|" . $cli_cod;
-            $observaciones = "Se asigna el Cliente '" . $cli_nom . "' al usuario '" . $nomUsuario . "'.\nObservación automática.";
-            
-            if (isset($cliUsu) && $cliUsu != false) {
-                $dataCliUsu = array(
-                    "Usuario" => $usuario,
-                    "Habilitado" => 1,
-                    "UsuarioModificacion" => $user,
-                    "FechaModificacion" => $fecha
-                );
-                
-                $dataOriginal = $cliUsu[0];
-                $dataNew = compararCambiosLog($dataOriginal, $dataCliUsu);
-                $this->Clientes_model->updateClientesUsuariosbyClient($cli_cod, $dataNew);
-                updateLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataOriginal, $dataNew, $observaciones);
-            } else {
-                $dataCliUsu = array(
-                    "Usuario" => $usuario,
-                    "Cliente" => $cli_cod,
-                    "Habilitado" => 1,
-                    "UsuarioCreacion" => $user,
-                    "FechaCreacion" => $fecha
-                );
-                $this->Clientes_model->saveCliUsu($dataCliUsu);
-            
-                $dataInsert = $dataCliUsu;
-                insertLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataInsert, $observaciones);
-            }
-        } catch (Exception $e) {
-            $lblErrores = 'Ha habido una excepción: ' . $e->getMessage() . "<br>Producto del Pedido.";
-        }
+        $dataCliUsu = array(
+            "Usuario" => $usuario,
+            "Cliente" => $cliente,
+            "Habilitado" => 1,
+            "UsuarioCreacion" => $user,
+            "FechaCreacion" => $fecha
+        );
+
+        ($this->Clientes_model->saveCliUsu($dataCliUsu));
     }
 
-    public function Consultar($cliente)
-    {
+    public function Consultar($cliente) {
         $idPermiso = 15;
         $page = validarPermisoPagina($idPermiso);
 
         if (isset($cliente)) {
             $dataClientes = $this->Clientes_model->obtenerClienteDir($cliente);
-            if (isset($dataClientes) && $dataClientes != false) {
+            if (isset($dataClientes) && $dataClientes != FALSE) {
                 $dataTipDoc = $this->TiposDocumentos_model->obtenerTiposDocumentoCod($dataClientes[0]["TipoDocumento"]);
-                if (isset($dataTipDoc) && $dataTipDoc != false) {
+                if (isset($dataTipDoc) && $dataTipDoc != FALSE) {
                     $dataTiposVivienda = $this->Direcciones_model->obtenerTiposVivienda();
-                    if (isset($dataTiposVivienda) && $dataTiposVivienda != false) {
+                    if (isset($dataTiposVivienda) && $dataTiposVivienda != FALSE) {
                         $dataReferencias = $this->Referencias_model->obtenerRefClienteData($cliente);
                         $dataRef = array();
-                        if (isset($dataReferencias) && $dataReferencias != false) {
+                        if (isset($dataReferencias) && $dataReferencias != FALSE) {
                             //Referencias (Encadenar)
                             $i = 0;
                             foreach ($dataReferencias as $value) {
@@ -1095,17 +959,15 @@ class Clientes extends CI_Controller
                         }
 
                         $dataPedido = $this->Pedidos_model->obtenerPedidosCliente($cliente);
-                        if (isset($dataPedido) && $dataPedido != false) {
+                        if (isset($dataPedido) && $dataPedido != FALSE) {
                             $pedido = $dataPedido[0]["Codigo"];
                             $dataProdPedido = $this->Pedidos_model->obtenerProductosPedidoCliente($pedido);
-                            if (isset($dataProdPedido) && $dataProdPedido != false) {
+                            if (isset($dataProdPedido) && $dataProdPedido != FALSE) {
                                 $dataVendedores = $this->Vendedores_model->obtenerVendedor($dataPedido[0]["Vendedor"]);
-                                if (isset($dataVendedores) && $dataVendedores != false) {
+                                if (isset($dataVendedores) && $dataVendedores != FALSE) {
                                     $dataEventos = $this->Eventos_model->obtenerEvento($dataPedido[0]["Evento"]);
-                                    if (isset($dataEventos) && $dataEventos != false) {
-                                        $usuariosAsignado = $this->Usuarios_model->obtenerUsuariosEP();
-                                        $UsuarioAsignado = $this->Usuarios_model->obtenerUsuarioAsignadoPorCliente($cliente);
-                                         
+                                    if (isset($dataEventos) && $dataEventos != FALSE) {
+
                                         $data = new stdClass();
                                         $data->Controller = "Clientes";
                                         $data->title = "Datos Cliente";
@@ -1122,8 +984,6 @@ class Clientes extends CI_Controller
                                         $data->Lista5 = $dataVendedores;
                                         $data->Lista6 = $dataEventos;
                                         $data->PaginaFisica = $dataPedido[0]["PaginaFisica"];
-                                        $data->ListaUsuarios = $usuariosAsignado;
-                                        $data->UsuarioAsignado = $UsuarioAsignado[0]["Codigo"];
 
                                         $this->load->view('frontend', $data);
                                     } else {
@@ -1160,8 +1020,7 @@ class Clientes extends CI_Controller
         }
     }
 
-    public function UpdateClientDataP()
-    {
+    public function UpdateClientDataP() {
         $idPermiso = 92;
         $page = validarPermisoAcciones($idPermiso);
         if ($page) {
@@ -1170,30 +1029,30 @@ class Clientes extends CI_Controller
             $cli_doc = trim($this->input->post('Documento'));
 
             $dataClientes = $this->Clientes_model->obtenerClienteDir($cli_cod);
-            if (isset($dataClientes) && $dataClientes != false) {
+            if (isset($dataClientes) && $dataClientes != FALSE) {
                 //Datos Auditoría
                 $user = $this->session->userdata('Usuario');
                 $fecha = date("Y-m-d H:i:s");
 
-                //Actualizar Datos
-                $dataPersonal = array(
+                //Crear Direccion
+                $data = array(
                     "Nombre" => $cli_nom,
                     "Documento" => $cli_doc,
                     "UsuarioModificacion" => $user,
                     "FechaModificacion" => $fecha
                 );
 
-                $dataOriginal = $dataClientes[0];
-                $dataNew = compararCambiosLog($dataOriginal, $dataPersonal);
-                if ($this->Clientes_model->update($cli_cod, $dataNew)) {
-                    $modulo = "Consultar Cliente";
-                    $accion = "Actualizar Datos Personales del Cliente '" . $cli_nom."'";
+                if ($this->Clientes_model->update($cli_cod, $data)) {
+                    $modulo = "Actualizar Clientes";
                     $tabla = "Clientes";
-                    $llave = $cli_cod;
-                    $cliente_log = $cli_cod;
-                    $enlace = "Clientes|Consultar|" . $cli_cod;
-                    $observaciones = "Actualización Nombre y Documento de '" . $cli_nom."'";
-                    updateLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataOriginal, $dataNew, $observaciones);
+                    $accion = "Modificar Nombre y Documento";
+                    $data = compararCambiosLog($dataClientes, $data);
+                    //var_dump($data);
+                    if (count($data) > 2) {
+                        $data['Codigo'] = $cli_cod;
+                        $sql = LogSave($data, $modulo, $tabla, $accion, $cli_cod);
+                    }
+
                     echo 1;
                 } else {
                     echo "No se pudo guardar la Dirección. Recargue la página e intente de nuevo.";
@@ -1206,18 +1065,16 @@ class Clientes extends CI_Controller
         }
     }
 
-    public function UpdateClientDir()
-    {
+    public function UpdateClientDir() {
         $idPermiso = 93;
         $page = validarPermisoAcciones($idPermiso);
         if ($page) {
             $cli_cod = trim($this->input->post('cli_cod'));
-            $cli_nom = trim($this->input->post('cli_nom'));
             $dataClientes = $this->Clientes_model->obtenerClienteDir($cli_cod);
-            if (isset($dataClientes) && $dataClientes != false) {
+            if (isset($dataClientes) && $dataClientes != FALSE) {
                 $cod_dir = $dataClientes[0]["Direccion"];
                 $dataDireccion = $this->Direcciones_model->obtenerDireccionPorCod($cod_dir);
-                if (isset($dataDireccion) && $dataDireccion != false) {
+                if (isset($dataDireccion) && $dataDireccion != FALSE) {
                     //Ubicacion
                     $cli_dir = ucwords(strtolower(trim($this->input->post('cli_dir'))));
                     $cli_eta = trim($this->input->post('cli_eta'));
@@ -1232,32 +1089,33 @@ class Clientes extends CI_Controller
                     $user = $this->session->userdata('Usuario');
                     $fecha = date("Y-m-d H:i:s");
 
-                    //Actualizar Direccion
+                    //Crear Direccion
                     $data = array(
                         "Direccion" => $cli_dir,
                         "Etapa" => $cli_eta,
                         "Torre" => $cli_tor,
-                        "Apartamento" => $cli_apto,
+                        "Apartamento " => $cli_apto,
                         "Manzana" => $cli_manz,
                         "Interior" => $cli_int,
                         "Casa" => $cli_casa,
                         "Barrio" => $cli_bar,
                         "TipoVivienda" => $cli_tipviv,
+                        "Habilitado" => 1,
                         "UsuarioModificacion" => $user,
                         "FechaModificacion" => $fecha
                     );
 
-                    $dataOriginal = $dataDireccion[0];
-                    $dataNew = compararCambiosLog($dataOriginal, $data);
                     if ($this->Direcciones_model->update($cod_dir, $data)) {
-                        $modulo = "Consultar Cliente";
-                        $accion = "Actualizar Dirección del Cliente '" . $cli_nom."'";
-                        $tabla = "Clientes";
-                        $llave = $cod_dir;
-                        $cliente_log = $cli_cod;
-                        $enlace = "Clientes|Consultar|" . $cli_cod;
-                        $observaciones = "Actualización Dirección de '" . $cli_nom."'";
-                        updateLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataOriginal, $dataNew, $observaciones);
+                        $modulo = "Actualizar Clientes";
+                        $tabla = "Direcciones";
+                        $accion = "Modificar Dirección";
+                        $data = compararCambiosLog($dataDireccion, $data);
+                        //var_dump($data);
+                        if (count($data) > 2) {
+                            $data['Direccion'] = $cli_dir;
+                            $sql = LogSave($data, $modulo, $tabla, $accion, $cli_cod);
+                        }
+
                         echo 1;
                     } else {
                         echo "No se pudo guardar la Dirección. Recargue la página e intente de nuevo.";
@@ -1273,15 +1131,13 @@ class Clientes extends CI_Controller
         }
     }
 
-    public function UpdateClientTel()
-    {
+    public function UpdateClientTel() {
         $idPermiso = 93;
         $page = validarPermisoAcciones($idPermiso);
         if ($page) {
             $cli_cod = trim($this->input->post('cli_cod'));
-            $cli_nom = trim($this->input->post('cli_nom'));
             $dataClientes = $this->Clientes_model->obtenerCliente($cli_cod);
-            if (isset($dataClientes) && $dataClientes != false) {
+            if (isset($dataClientes) && $dataClientes != FALSE) {
                 //Telefonos
                 $cli_tel1 = trim($this->input->post('cli_tel1'));
                 $cli_tel2 = trim($this->input->post('cli_tel2'));
@@ -1290,34 +1146,24 @@ class Clientes extends CI_Controller
                 $user = $this->session->userdata('Usuario');
                 $fecha = date("Y-m-d H:i:s");
 
-                $dataTel= array(
-                    "Telefono1" => $dataClientes[0]["Telefono1"],
-                    "Telefono2" => $dataClientes[0]["Telefono2"],
-                    "Telefono3" => $dataClientes[0]["Telefono3"]
-                );
+                //$data = $dataClientes;
+                $data["Telefono1"] = $cli_tel1;
+                $data["Telefono2"] = $cli_tel2;
+                $data["Telefono3"] = $cli_tel3;
+                $data["UsuarioModificacion"] = $user;
+                $data["FechaModificacion"] = $fecha;
 
-                //Actualizar Teléfono
-                $dataTelefono = array(
-                    "Telefono1" => $cli_tel1,
-                    "Telefono2" => $cli_tel2,
-                    "Telefono3" => $cli_tel3,
-                    "UsuarioModificacion" => $user,
-                    "FechaModificacion" => $fecha
-                );
-                
-                $dataOriginal = $dataTel;
-                $dataNew = compararCambiosLog($dataOriginal, $dataTelefono);
-                if ($this->Clientes_model->update($cli_cod, $dataNew)) {
-                    if (count($dataNew) > 2) {
-                        $modulo = "Consultar Cliente";
-                        $accion = "Actualizar Teléfono del Cliente '" . $cli_nom."'";
-                        $tabla = "Clientes";
-                        $llave = $cli_cod;
-                        $cliente_log = $cli_cod;
-                        $enlace = "Clientes|Consultar|" . $cli_cod;
-                        $observaciones = "Actualización Teléfono de '" . $cli_nom."'";
-                        updateLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataOriginal, $dataNew, $observaciones);
+                if ($this->Clientes_model->update($cli_cod, $data)) {
+                    $modulo = "Actualizar Clientes";
+                    $tabla = "Clientes";
+                    $accion = "Modificar Teléfonos";
+                    $data = compararCambiosLog($dataClientes, $data);
+                    //var_dump($data);
+                    if (count($data) > 2) {
+                        $data['Codigo'] = $cli_cod;
+                        $sql = LogSave($data, $modulo, $tabla, $accion, $cli_cod);
                     }
+
                     echo 1;
                 } else {
                     echo "No se pudo guardar los Teléfonos. Recargue la página e intente de nuevo.";
@@ -1330,15 +1176,14 @@ class Clientes extends CI_Controller
         }
     }
 
-    public function UpdateClientRef()
-    {
+    public function UpdateClientRef() {
         $idPermiso = 93;
         $page = validarPermisoAcciones($idPermiso);
         if ($page) {
             $cli_cod = trim($this->input->post('cli_cod'));
             $cli_nom = trim($this->input->post('cli_nom'));
             $dataClientes = $this->Clientes_model->obtenerCliente($cli_cod);
-            if (isset($dataClientes) && $dataClientes != false) {
+            if (isset($dataClientes) && $dataClientes != FALSE) {
                 //Referencias
                 $cli_codrf1 = trim($this->input->post('cli_codrf1'));
                 $cli_nomrf1 = ucwords(strtolower(trim($this->input->post('cli_nomrf1'))));
@@ -1368,35 +1213,20 @@ class Clientes extends CI_Controller
                         "UsuarioModificacion" => $user,
                         "FechaModificacion" => $fecha
                     );
-                    
-                    $dataRef = $this->Referencias_model->obtenerReferencia($cli_codrf1);
-                    if (!isset($dataRef) && $dataRef == false) {
-                        $dReferencia = array();
-                    } else {
-                        $dReferencia = array(
-                            "Nombres" => $dataRef[0]["Nombres"],
-                            "Telefono" => $dataRef[0]["Telefono"],
-                            "Parentesco" => $dataRef[0]["Parentesco"]
-                        );
-                    }
-
-                    $dataOriginal = $dReferencia;
-                    $dataNew = compararCambiosLog($dataOriginal, $data);
-                    $dataOriginal = $dataRef[0];
-                    if (count($dataNew) > 2) {
-                        if ($this->Referencias_model->update($cli_codrf1, $data)) {
-                            $modulo = "Consultar Cliente";
-                            $accion = "Actualizar Referencia del Cliente '" . $cli_nom."'";
-                            $tabla = "Referencias";
-                            $enlace = "Clientes|Consultar|" . $cli_cod;
-                            $llave = $cli_codrf1;
-                            $cliente_log = $cli_cod;
-                            $observaciones = "Actualización Referencia: '" . $cli_nomrf1."'";
-                            updateLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataOriginal, $dataNew, $observaciones);
-                        } else {
-                            $errores++;
-                            echo "No se pudieron guardar las Referencias. Recargue la página e intente de nuevo.";
+                    if ($this->Referencias_model->update($cli_codrf1, $data)) {
+                        $modulo = "Actualizar Clientes";
+                        $tabla = "Referencias";
+                        $accion = "Modificar Referencias";
+                        //$data = compararCambiosLog($dataClientes, $data);
+                        //var_dump($data);
+                        if (count($data) > 2) {
+                            $data['Codigo'] = $cli_codrf1;
+                            $data['Observaciones'] = "Se actualiza la referencia " . $cli_codrf1 . " del Cliente: " . $cli_nom . "\n\nObservación automática";
+                            $sql = LogSave($data, $modulo, $tabla, $accion, $cli_cod);
                         }
+                    } else {
+                        $errores++;
+                        echo "No se pudieron guardar las Referencias. Recargue la página e intente de nuevo.";
                     }
                 } else {
                     if ($cli_nomrf1 != "" && $cli_telrf1 != "" && $cli_paren1 != "") {
@@ -1415,15 +1245,11 @@ class Clientes extends CI_Controller
                                 $Ref1 = $this->Referencias_model->obtenerReferenciasCodUserFec($cli_nomrf1, $user, $fecha);
                                 if ($Ref1) {
                                     $dataReferencia1['Codigo'] = $Ref1[0]['Codigo'];
-                                    $modulo = "Consultar Cliente";
-                                    $accion = "Agregar Referencia del Cliente '" . $cli_nom."'";
+                                    $modulo = "Actualizar Clientes";
                                     $tabla = "Referencias";
-                                    $llave = $dataReferencia1['Codigo'];
-                                    $cliente_log = $cli_cod;
-                                    $enlace = "Clientes|Consultar|" . $cli_cod;
-                                    $dataInsert = $dataReferencia1;
-                                    $observaciones = "";
-                                    insertLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataInsert, $observaciones);
+                                    $accion = "Crear Referencia";
+                                    $llave = $cli_cod;
+                                    $sql = LogSave($dataReferencia1, $modulo, $tabla, $accion, $llave);
 
                                     $dataRefCliente1 = array(
                                         "Cliente" => $cli_cod,
@@ -1433,7 +1259,20 @@ class Clientes extends CI_Controller
                                         "FechaCreacion" => $fecha
                                     );
 
-                                    if (!$this->Referencias_model->saveRefCli($dataRefCliente1)) {
+                                    if ($this->Referencias_model->saveRefCli($dataRefCliente1)) {
+                                        $RefCli1 = $this->Referencias_model->obtenerRefClienteCodUserFec($cli_cod, $Ref1[0]['Codigo'], $user, $fecha);
+                                        if ($RefCli1) {
+                                            $dataRefCliente1['Codigo'] = $RefCli1[0]['Codigo'];
+                                            $modulo = "Actualizar Clientes";
+                                            $tabla = "ReferenciasCliente";
+                                            $accion = "Vincular Cliente y Referencia";
+                                            $llave = $cli_cod;
+                                            $sql = LogSave($dataRefCliente1, $modulo, $tabla, $accion, $llave);
+                                        } else {
+                                            $errores++;
+                                            echo "No se pudo guardar, por favor intentelo de nuevo.";
+                                        }
+                                    } else {
                                         $errores++;
                                         echo "No se pudo guardar, por favor intentelo de nuevo.";
                                     }
@@ -1461,35 +1300,18 @@ class Clientes extends CI_Controller
                         "UsuarioModificacion" => $user,
                         "FechaModificacion" => $fecha
                     );
-                    
-                    $dataRef = $this->Referencias_model->obtenerReferencia($cli_codrf2);
-                    if (!isset($dataRef) && $dataRef == false) {
-                        $dReferencia = array();
-                    } else {
-                        $dReferencia = array(
-                            "Nombres" => $dataRef[0]["Nombres"],
-                            "Telefono" => $dataRef[0]["Telefono"],
-                            "Parentesco" => $dataRef[0]["Parentesco"]
-                        );
-                    }
-
-                    $dataOriginal = $dReferencia;
-                    $dataNew = compararCambiosLog($dataOriginal, $data);
-                    $dataOriginal = $dataRef[0];
-                    if (count($dataNew) > 2) {
-                        if ($this->Referencias_model->update($cli_codrf2, $data)) {
-                            $modulo = "Consultar Cliente";
-                            $accion = "Actualizar Referencia del Cliente '" . $cli_nom."'";
-                            $tabla = "Referencias";
-                            $enlace = "Clientes|Consultar|" . $cli_cod;
-                            $llave = $cli_codrf2;
-                            $cliente_log = $cli_cod;
-                            $observaciones = "Actualización Referencia: '" . $cli_nomrf2."'";
-                            updateLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataOriginal, $dataNew, $observaciones);
-                        } else {
-                            $errores++;
-                            echo "No se pudieron guardar las Referencias. Recargue la página e intente de nuevo.";
+                    if ($this->Referencias_model->update($cli_codrf2, $data)) {
+                        $modulo = "Actualizar Clientes";
+                        $tabla = "Referencias";
+                        $accion = "Modificar Referencias";
+                        if (count($data) > 2) {
+                            $data['Codigo'] = $cli_codrf2;
+                            $data['Observaciones'] = "Se actualiza la referencia " . $cli_codrf2 . " del Cliente: " . $cli_nom . "\n\nObservación automática";
+                            $sql = LogSave($data, $modulo, $tabla, $accion, $cli_cod);
                         }
+                    } else {
+                        $errores++;
+                        echo "No se pudieron guardar las Referencias. Recargue la página e intente de nuevo.";
                     }
                 } else {
                     if ($cli_nomrf2 != "" && $cli_telrf2 != "" && $cli_paren2 != "") {
@@ -1508,15 +1330,11 @@ class Clientes extends CI_Controller
                                 $Ref2 = $this->Referencias_model->obtenerReferenciasCodUserFec($cli_nomrf2, $user, $fecha);
                                 if ($Ref2) {
                                     $dataReferencia2['Codigo'] = $Ref2[0]['Codigo'];
-                                    $modulo = "Consultar Cliente";
-                                    $accion = "Agregar Referencia del Cliente '" . $cli_nom."'";
+                                    $modulo = "Actualizar Clientes";
                                     $tabla = "Referencias";
-                                    $llave = $dataReferencia2['Codigo'];
-                                    $cliente_log = $cli_cod;
-                                    $enlace = "Clientes|Consultar|" . $cli_cod;
-                                    $dataInsert = $dataReferencia2;
-                                    $observaciones = "";
-                                    insertLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataInsert, $observaciones);
+                                    $accion = "Crear Referencia";
+                                    $llave = $cli_cod;
+                                    $sql = LogSave($dataReferencia2, $modulo, $tabla, $accion, $llave);
 
                                     $dataRefCliente2 = array(
                                         "Cliente" => $cli_cod,
@@ -1526,7 +1344,20 @@ class Clientes extends CI_Controller
                                         "FechaCreacion" => $fecha
                                     );
 
-                                    if (!$this->Referencias_model->saveRefCli($dataRefCliente2)) {
+                                    if ($this->Referencias_model->saveRefCli($dataRefCliente2)) {
+                                        $RefCli2 = $this->Referencias_model->obtenerRefClienteCodUserFec($cli_cod, $Ref2[0]['Codigo'], $user, $fecha);
+                                        if ($RefCli2) {
+                                            $dataRefCliente2['Codigo'] = $RefCli2[0]['Codigo'];
+                                            $modulo = "Actualizar Clientes";
+                                            $tabla = "ReferenciasCliente";
+                                            $accion = "Vincular Cliente y Referencia";
+                                            $llave = $cli_cod;
+                                            $sql = LogSave($dataRefCliente2, $modulo, $tabla, $accion, $llave);
+                                        } else {
+                                            $errores++;
+                                            echo "No se pudo guardar, por favor intentelo de nuevo.";
+                                        }
+                                    } else {
                                         $errores++;
                                         echo "No se pudo guardar, por favor intentelo de nuevo.";
                                     }
@@ -1554,35 +1385,18 @@ class Clientes extends CI_Controller
                         "UsuarioModificacion" => $user,
                         "FechaModificacion" => $fecha
                     );
-                    
-                    $dataRef = $this->Referencias_model->obtenerReferencia($cli_codrf3);
-                    if (!isset($dataRef) && $dataRef == false) {
-                        $dReferencia = array();
-                    } else {
-                        $dReferencia = array(
-                            "Nombres" => $dataRef[0]["Nombres"],
-                            "Telefono" => $dataRef[0]["Telefono"],
-                            "Parentesco" => $dataRef[0]["Parentesco"]
-                        );
-                    }
-
-                    $dataOriginal = $dReferencia;
-                    $dataNew = compararCambiosLog($dataOriginal, $data);
-                    $dataOriginal = $dataRef[0];
-                    if (count($dataNew) > 2) {
-                        if ($this->Referencias_model->update($cli_codrf3, $data)) {
-                            $modulo = "Consultar Cliente";
-                            $accion = "Actualizar Referencia del Cliente '" . $cli_nom."'";
-                            $tabla = "Referencias";
-                            $enlace = "Clientes|Consultar|" . $cli_cod;
-                            $llave = $cli_codrf3;
-                            $cliente_log = $cli_cod;
-                            $observaciones = "Actualización Referencia: '" . $cli_nomrf3."'";
-                            updateLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataOriginal, $dataNew, $observaciones);
-                        } else {
-                            $errores++;
-                            echo "No se pudieron guardar las Referencias. Recargue la página e intente de nuevo.";
+                    if ($this->Referencias_model->update($cli_codrf3, $data)) {
+                        $modulo = "Actualizar Clientes";
+                        $tabla = "Referencias";
+                        $accion = "Modificar Referencias";
+                        if (count($data) > 2) {
+                            $data['Codigo'] = $cli_codrf3;
+                            $data['Observaciones'] = "Se actualiza la referencia " . $cli_codrf3 . " del Cliente: " . $cli_nom . "\n\nObservación automática";
+                            $sql = LogSave($data, $modulo, $tabla, $accion, $cli_cod);
                         }
+                    } else {
+                        $errores++;
+                        echo "No se pudieron guardar las Referencias. Recargue la página e intente de nuevo.";
                     }
                 } else {
                     if ($cli_nomrf3 != "" && $cli_telrf3 != "" && $cli_paren3 != "") {
@@ -1601,15 +1415,11 @@ class Clientes extends CI_Controller
                                 $Ref3 = $this->Referencias_model->obtenerReferenciasCodUserFec($cli_nomrf3, $user, $fecha);
                                 if ($Ref3) {
                                     $dataReferencia3['Codigo'] = $Ref3[0]['Codigo'];
-                                    $modulo = "Consultar Cliente";
-                                    $accion = "Agregar Referencia del Cliente '" . $cli_nom."'";
+                                    $modulo = "Actualizar Clientes";
                                     $tabla = "Referencias";
-                                    $llave = $dataReferencia3['Codigo'];
-                                    $cliente_log = $cli_cod;
-                                    $enlace = "Clientes|Consultar|" . $cli_cod;
-                                    $dataInsert = $dataReferencia3;
-                                    $observaciones = "";
-                                    insertLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataInsert, $observaciones);
+                                    $accion = "Crear Referencia";
+                                    $llave = $cli_cod;
+                                    $sql = LogSave($dataReferencia3, $modulo, $tabla, $accion, $llave);
 
                                     $dataRefCliente3 = array(
                                         "Cliente" => $cli_cod,
@@ -1619,7 +1429,20 @@ class Clientes extends CI_Controller
                                         "FechaCreacion" => $fecha
                                     );
 
-                                    if (!$this->Referencias_model->saveRefCli($dataRefCliente3)) {
+                                    if ($this->Referencias_model->saveRefCli($dataRefCliente3)) {
+                                        $RefCli3 = $this->Referencias_model->obtenerRefClienteCodUserFec($cli_cod, $Ref3[0]['Codigo'], $user, $fecha);
+                                        if ($RefCli3) {
+                                            $dataRefCliente3['Codigo'] = $RefCli3[0]['Codigo'];
+                                            $modulo = "Actualizar Clientes";
+                                            $tabla = "ReferenciasCliente";
+                                            $accion = "Vincular Cliente y Referencia";
+                                            $llave = $cli_cod;
+                                            $sql = LogSave($dataRefCliente3, $modulo, $tabla, $accion, $llave);
+                                        } else {
+                                            $errores++;
+                                            echo "No se pudo guardar, por favor intentelo de nuevo.";
+                                        }
+                                    } else {
                                         $errores++;
                                         echo "No se pudo guardar, por favor intentelo de nuevo.";
                                     }
@@ -1648,25 +1471,20 @@ class Clientes extends CI_Controller
         }
     }
 
-    public function UpdateClientObs()
-    {
+    public function UpdateClientObs() {
         $idPermiso = 93;
         $page = validarPermisoAcciones($idPermiso);
         if ($page) {
             $cli_cod = trim($this->input->post('cli_cod'));
             $cli_ped = trim($this->input->post('cli_ped'));
-            $cli_nom = trim($this->input->post('cli_nom'));
             $cli_pag = trim($this->input->post('cli_pag'));
-            $cli_usu = trim($this->input->post('cli_usu'));
-            $cli_usu_nom = trim($this->input->post('cli_usu_nom'));
             $cli_obs = ucfirst(strtolower(trim($this->input->post('cli_obs'))));
             //Datos Auditoría
             $user = $this->session->userdata('Usuario');
             $fecha = date("Y-m-d H:i:s");
 
-            $errores = 0;
             $dataClientes = $this->Clientes_model->obtenerCliente($cli_cod);
-            if (isset($dataClientes) && $dataClientes != false) {
+            if (isset($dataClientes) && $dataClientes != FALSE) {
                 $obsActual = $dataClientes[0]["Observaciones"];
                 $obsNueva = $obsActual . "\n---\n" . $cli_obs;
 
@@ -1681,56 +1499,28 @@ class Clientes extends CI_Controller
                     "UsuarioModificacion" => $user,
                     "FechaModificacion" => $fecha
                 );
-                
-                $dataPedido = $this->Pedidos_model->obtenerPedido($cli_ped);
-                $dPagina = array('PaginaFisica' => $dataPedido[0]["PaginaFisica"]);
-                $dataOriginal = $dPagina;
-                $dataNew = compararCambiosLog($dataOriginal, $dataPag);
                 if ($this->Pedidos_model->update($cli_ped, $dataPag)) {
-                    if (count($dataNew) > 2) {
-                        $modulo = "Consultar Cliente";
-                        $accion = "Actualizar Observaciones del Cliente '" . $cli_nom."'";
-                        $tabla = "Pedidos";
-                        $llave = $cli_cod;
-                        $cliente_log = $cli_cod;
-                        $enlace = "Clientes|Consultar|" . $cli_cod;
-                        $observaciones = "Actualización de Ubicación/Página Física del '" . $cli_nom."'";
-                        updateLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataOriginal, $dataNew, $observaciones);
+                    if (strlen($cli_obs) <= 0) {
+                        echo 1;
+                    } else {
+                        if ($this->Clientes_model->update($cli_cod, $dataObs)) {
+                            $dataObs["NuevaObservacion"] = $cli_obs;
+                            $modulo = "Actualizar Clientes";
+                            $tabla = "Clientes";
+                            $accion = "Modificar Observaciones";
+                            //var_dump($data);
+                            if (count($dataObs) > 2) {
+                                $dataObs['Codigo'] = $cli_cod;
+                                $sql = LogSave($dataObs, $modulo, $tabla, $accion, $cli_cod);
+                            }
+
+                            echo 1;
+                        } else {
+                            echo "No se pudieron guardar las Observaciones. Recargue la página e intente de nuevo.";
+                        }
                     }
                 } else {
-                    $errores++;
                     echo "No se pudo guardar la ubicación física. Recargue la página e intente de nuevo.";
-                }
-
-                if (strlen($cli_obs) > 0) {
-                    $dataOriginal = $dataClientes[0];
-                    $dataNew = compararCambiosLog($dataOriginal, $dataObs);
-                    if ($this->Clientes_model->update($cli_cod, $dataObs)) {
-                        if (count($dataNew) > 2) {
-                            $modulo = "Consultar Cliente";
-                            $accion = "Actualizar Observaciones del Cliente '" . $cli_nom."'";
-                            $tabla = "Clientes";
-                            $llave = $cli_cod;
-                            $cliente_log = $cli_cod;
-                            $enlace = "Clientes|Consultar|" . $cli_cod;
-                            $observaciones = "Actualización de Observaciones del '" . $cli_nom."'";
-                            updateLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataOriginal, $dataNew, $observaciones);
-                        }
-                    } else {
-                        $errores++;
-                        echo "No se pudieron guardar las Observaciones. Recargue la página e intente de nuevo.";
-                    }
-                }
-                
-                $lblErrores = $this->asignarClienteUsuario($cli_cod, $cli_nom, $cli_usu, $cli_usu_nom, $fecha);
-                if ($lblErrores != null) {
-                    echo $lblErrores;
-                    $errores++;
-                    return false;
-                }
-                
-                if ($errores <= 0) {
-                    echo "1";
                 }
             } else {
                 echo "No se puede acceder a los datos del Cliente. Recargue la página e intente de nuevo.";
@@ -1740,8 +1530,7 @@ class Clientes extends CI_Controller
         }
     }
 
-    public function Pagos($cliente)
-    {
+    public function Pagos($cliente) {
         if (isset($cliente)) {
             redirect(base_url("Pagos/Cliente/" . $cliente . "/"));
         } else {
@@ -1750,16 +1539,15 @@ class Clientes extends CI_Controller
         }
     }
 
-    public function Log($cliente)
-    {
+    public function Log($cliente) {
         if ($cliente == null || $cliente == "") {
             $this->session->set_flashdata("error", "No se encontró Cliente.");
             redirect(base_url("/Clientes/Admin/"));
         } else {
             $dataClientes = $this->Clientes_model->obtenerClienteDir($cliente);
-            if (isset($dataClientes) && $dataClientes != false) {
+            if (isset($dataClientes) && $dataClientes != FALSE) {
                 $dataLog = $this->Clientes_model->LogCliente($cliente);
-                if (isset($dataLog) && $dataLog != false) {
+                if (isset($dataLog) && $dataLog != FALSE) {
                     $data = new stdClass();
                     $data->Controller = "Log";
                     $data->title = "Log del Cliente";
@@ -1778,10 +1566,9 @@ class Clientes extends CI_Controller
         }
     }
 
-    public function VerLog($codigo)
-    {
+    public function VerLog($codigo) {
         $dataLog = $this->Log_model->obtenerLogPorCod($codigo);
-        if (isset($dataLog) && $dataLog != false) {
+        if (isset($dataLog) && $dataLog != FALSE) {
             $data = new stdClass();
             $data->Controller = "Log";
             $data->title = "Log de Registros";
@@ -1795,8 +1582,7 @@ class Clientes extends CI_Controller
         }
     }
 
-    public function History($cliente, $pedido, $fecha, $usuario, $accion, $saldoAnt, $cuota, $saldoNue, $abono, $obs)
-    {
+    public function History($cliente, $pedido, $fecha, $usuario, $accion, $saldoAnt, $cuota, $saldoNue, $abono, $obs) {
         $historia = array(
             "Pedido" => $pedido,
             "Cliente" => $cliente,
@@ -1813,19 +1599,19 @@ class Clientes extends CI_Controller
         $this->Pagos_model->saveHistoria($historia);
     }
 
-    public function CambioFecha($cliente)
-    {
+    public function CambioFecha($cliente) {
         $idPermiso = 16;
         $page = validarPermisoPagina($idPermiso);
 
         if (isset($cliente)) {
             $dataClientes = $this->Clientes_model->obtenerClienteDir($cliente);
-            if (isset($dataClientes) && $dataClientes != false) {
+            if (isset($dataClientes) && $dataClientes != FALSE) {
                 $dataPedido = $this->Pedidos_model->obtenerPedidosCliente($cliente);
-                if (isset($dataPedido) && $dataPedido != false) {
+                if (isset($dataPedido) && $dataPedido != FALSE) {
                     $pedido = $dataPedido[0]["Codigo"];
                     $dataProdPedido = $this->Pedidos_model->obtenerProductosPedidoCliente($pedido);
-                    if (isset($dataProdPedido) && $dataProdPedido != false) {
+                    if (isset($dataProdPedido) && $dataProdPedido != FALSE) {
+
                         $data = new stdClass();
                         $data->Controller = "Clientes";
                         $data->title = "Fecha de Pago";
@@ -1856,14 +1642,11 @@ class Clientes extends CI_Controller
         }
     }
 
-    public function ChangePayDate()
-    {
+    public function ChangePayDate() {
         $idPermiso = 95;
         $accion = validarPermisoAcciones($idPermiso);
         if ($accion) {
             $cli_ped = trim($this->input->post('cli_ped'));
-            $cli_cod = trim($this->input->post('cli_cli'));
-            $cli_nom = trim($this->input->post('cli_nom'));
             $cli_fec = trim($this->input->post('cli_fec') . " 00:00:00");
             $cli_fec = preg_replace('#(\d{2})/(\d{2})/(\d{4})\s(.*)#', '$3-$2-$1 $4', $cli_fec);
 
@@ -1878,22 +1661,18 @@ class Clientes extends CI_Controller
             );
 
             try {
-                $dataTemp = $this->Pedidos_model->obtenerPedidoCampos($cli_ped, "DiaCobro, UsuarioModificacion, FechaModificacion");
-                $dataOriginal = $dataTemp[0];
-                $dataNew = compararCambiosLog($dataOriginal, $dataP);
-                
                 if ($this->Pedidos_model->update($cli_ped, $dataP)) {
-                    if (count($dataNew) > 2) {
-                        $modulo = "Cambiar Fecha de Pago";
-                        $accion = "Actualizar Fecha de Pago del Cliente '" . $cli_nom."'";
-                        $tabla = "Pedidos";
+                    $modulo = "Fecha Pago Pedido";
+                    $tabla = "Pedidos";
+                    $accion = "Cambio de Fecha de Pago";
+                    $data = $dataP;
+                    if (count($data) > 2) {
+                        $data['Codigo'] = $cli_ped;
+                        $data['Observaciones'] = "Se cambia Fecha de Pago\nNueva fecha de Cobro: " . $cli_fec . "\n \nObservación automática.";
                         $llave = $cli_ped;
-                        $cliente_log = $cli_cod;
-                        $enlace = "Clientes|CambioFecha|" . $cli_cod;
-                        $observaciones = "Se cambia Fecha de Pago\nNueva fecha de Cobro: " . $cli_fec . "\n \nObservación automática.";
-                        updateLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataOriginal, $dataNew, $observaciones);
+                        $sql = LogSave($data, $modulo, $tabla, $accion, $llave);
+                        echo 1;
                     }
-                    echo 1;
                 } else {
                     echo "No se pudo Actualizar la Fecha de Pago. Actualice la página y vuelva a intentarlo.";
                 }
@@ -1905,28 +1684,27 @@ class Clientes extends CI_Controller
         }
     }
 
-    public function CambioTarifa($cliente)
-    {
+    public function CambioTarifa($cliente) {
         $idPermiso = 17;
         $page = validarPermisoPagina($idPermiso);
 
         if (isset($cliente)) {
             $dataClientes = $this->Clientes_model->obtenerClienteDir($cliente);
-            if (isset($dataClientes) && $dataClientes != false) {
+            if (isset($dataClientes) && $dataClientes != FALSE) {
                 $dataPedido = $this->Pedidos_model->obtenerPedidosCliente($cliente);
-                if (isset($dataPedido) && $dataPedido != false) {
+                if (isset($dataPedido) && $dataPedido != FALSE) {
                     $pedido = $dataPedido[0]["Codigo"];
                     $dataProdPedido = $this->Pedidos_model->obtenerProductosPedidoCliente($pedido);
-                    if (isset($dataProdPedido) && $dataProdPedido != false) {
+                    if (isset($dataProdPedido) && $dataProdPedido != FALSE) {
                         $Producto = $dataProdPedido[0]["Producto"];
                         $dataTarifa = $this->Tarifas_model->obtenerTarifaPorProducto($Producto);
-                        if (isset($dataTarifa) && $dataTarifa != false) {
+                        if (isset($dataTarifa) && $dataTarifa != FALSE) {
                             $pago = $dataPedido[0]["Valor"] - $dataPedido[0]["Saldo"];
 
                             $data = new stdClass();
                             $data->Controller = "Clientes";
                             $data->title = "Cambio de Tarifa";
-                            $data->subtitle = $dataClientes[0]["Nombre"];
+                            $data->subtitle = "Tarifa";
                             $data->contenido = $this->viewControl . '/CambioTarifa';
                             $data->cliente = $cliente;
                             $data->pedido = $pedido;
@@ -1960,8 +1738,7 @@ class Clientes extends CI_Controller
         }
     }
 
-    public function changeRate()
-    {
+    public function changeRate() {
         $idPermiso = 96;
         $accion = validarPermisoAcciones($idPermiso);
         if ($accion) {
@@ -1972,12 +1749,11 @@ class Clientes extends CI_Controller
             $tar_num = trim($this->input->post('tar_num'));
             $tar_cuo = trim($this->input->post('tar_cuo'));
             $tar_sal = trim($this->input->post('tar_sal'));
-            $cli_cod = trim($this->input->post('cli_cli'));
-            $cli_nom = trim($this->input->post('cli_nom'));
             //Datos Auditoría
             $user = $this->session->userdata('Usuario');
             $fecha = date("Y-m-d H:i:s");
 
+            //echo $tar_ped . " - " . $tar_tar . " - " . $tar_tot . " - " . $tar_num . " - " . $tar_cuo . " - " . $tar_sal;
             $dataPedido = array(
                 "Valor" => $tar_tot,
                 "Tarifa" => $tar_tar,
@@ -1987,23 +1763,20 @@ class Clientes extends CI_Controller
             );
 
             try {
-                $dataTemp = $this->Pedidos_model->obtenerPedidoCampos($tar_ped, "Valor, Tarifa, Saldo, UsuarioModificacion, FechaModificacion");
-                $dataOriginal = $dataTemp[0];
-                $dataNew = compararCambiosLog($dataOriginal, $dataPedido);
                 if ($this->Pedidos_model->update($tar_ped, $dataPedido)) {
-                    if (count($dataNew) > 2) {
-                        $modulo = "Cambiar Tarifa Pedido";
-                        $accion = "Actualizar Tarifa del Cliente '" . $cli_nom."'";
-                        $tabla = "Pedidos";
+                    $modulo = "Tarifa Pedido";
+                    $tabla = "Pedidos";
+                    $accion = "Cambio de Tarifa";
+                    $data = $dataPedido;
+                    if (count($data) > 2) {
+                        $data['Codigo'] = $tar_ped;
+                        $data['Observaciones'] = "Se cambia la tarifa de Pago\nNueva Tarifa: " . $tar_nom . "\n \nObservación automática.";
                         $llave = $tar_ped;
-                        $cliente_log = $cli_cod;
-                        $enlace = "Clientes|Consultar|" . $cli_cod;
-                        $observaciones = "Se cambia la tarifa de Pago\nNueva Tarifa: " . $tar_nom . "\n \nObservación automática.";
-                        updateLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataOriginal, $dataNew, $observaciones);
+                        $sql = LogSave($data, $modulo, $tabla, $accion, $llave);
                     }
 
                     $dataPagos = $this->Pagos_model->obtenerPagosPedido($tar_ped);
-                    if (isset($dataPagos) && $dataPagos != false) {
+                    if (isset($dataPagos) && $dataPagos != FALSE) {
                         foreach ($dataPagos as $value) {
                             $pago = array(
                                 "TotalPago" => $tar_tot,
@@ -2011,10 +1784,19 @@ class Clientes extends CI_Controller
                                 "UsuarioModificacion" => $user,
                                 "FechaModificacion" => $fecha
                             );
- 
-                            $this->Pagos_model->update($value["Codigo"], $pago);
 
-                            $this->History($cli_cod, $tar_ped, $fecha, $user, "Cambio de Tarifa", $dataTemp[0]["Saldo"], 0, $tar_sal, 0, $observaciones);
+                            if ($this->Pagos_model->update($value["Codigo"], $pago)) {
+                                $modulo = "Tarifa/Pago Pedido";
+                                $tabla = "Pagos";
+                                $accion = "Cambio de Tarifa";
+                                $data = $pago;
+                                if (count($data) > 2) {
+                                    $data['Codigo'] = $value["Codigo"];
+                                    $data['Observaciones'] = "Se cambia la tarifa de Pago\nNueva Tarifa: " . $tar_nom . "\n \nObservación automática.";
+                                    $llave = $value["Codigo"];
+                                    $sql = LogSave($data, $modulo, $tabla, $accion, $llave);
+                                }
+                            }
                         }
                     }
                     echo 1;
@@ -2029,8 +1811,7 @@ class Clientes extends CI_Controller
         }
     }
 
-    public function Contador()
-    {
+    public function Contador() {
         $f1 = date("Y-m-d 00:00:00");
         $f2 = date("Y-m-d 23:59:59");
 
@@ -2045,8 +1826,7 @@ class Clientes extends CI_Controller
         $this->load->view('frontend', $data);
     }
 
-    public function ConteoClientesPost()
-    {
+    public function ConteoClientesPost() {
         $fecha1 = trim($this->input->post('pag_fec1') . " 00:00:00");
         $fecha1 = preg_replace('#(\d{2})/(\d{2})/(\d{4})\s(.*)#', '$3-$2-$1 $4', $fecha1);
         $fecha2 = trim($this->input->post('pag_fec2') . " 23:59:59");
@@ -2056,8 +1836,7 @@ class Clientes extends CI_Controller
         echo json_encode($Clientes);
     }
 
-    public function ConteoClientes($fecha1, $fecha2)
-    {
+    public function ConteoClientes($fecha1, $fecha2) {
         $Clientes = array();
         $Registrados = $this->Clientes_model->AllClients();
         $Clientes["Registrados"] = $Registrados[0]["Num"];
@@ -2081,8 +1860,7 @@ class Clientes extends CI_Controller
         return $Clientes;
     }
 
-    public function Asignados()
-    {
+    public function Asignados() {
         $dataCliente = $this->Clientes_model->obtenerClientesAsignados();
         $dataEstados = $this->Estados_model->obtenerEstadosPor(102);
         $dataUsuarios = $this->Usuarios_model->obtenerUsuariosEP();
@@ -2099,13 +1877,12 @@ class Clientes extends CI_Controller
         $this->load->view('frontend', $data);
     }
 
-    public function Productos($pedido)
-    {
+    public function Productos($pedido) {
         if (isset($pedido)) {
             $dataProdPedido = $this->Pedidos_model->obtenerProductosPedidoCliente($pedido);
-            if (isset($dataProdPedido) && $dataProdPedido != false) {
+            if (isset($dataProdPedido) && $dataProdPedido != FALSE) {
                 $dataProductos = $this->Productos_model->obtenerProductos();
-                if (isset($dataProductos) && $dataProductos != false) {
+                if (isset($dataProductos) && $dataProductos != FALSE) {
                     $data = new stdClass();
                     $data->Controller = "Clientes";
                     $data->title = "Productos Cliente";
@@ -2133,12 +1910,10 @@ class Clientes extends CI_Controller
         }
     }
 
-    public function AddProducto()
-    {
+    public function AddProducto() {
         $pedido = trim($this->input->post('pedido'));
         $producto = trim($this->input->post('producto'));
         $nombre = trim($this->input->post('nombre'));
-        $cli_nom = trim($this->input->post('cli_nom'));
         $tarifa = trim($this->input->post('tarifa'));
         $cantidad = trim($this->input->post('cantidad'));
         $valor = trim($this->input->post('valor'));
@@ -2147,20 +1922,19 @@ class Clientes extends CI_Controller
         //Datos Auditoría
         $user = $this->session->userdata('Usuario');
         $fecha = date("Y-m-d H:i:s");
-        
+
         if (isset($pedido)) {
             $dataProdPedido = $this->Pedidos_model->obtenerProductosPedidoCliente($pedido);
-            if (isset($dataProdPedido) && $dataProdPedido != false) {
-                $cli_cod = $dataProdPedido[0]["CodCliente"];
+            if (isset($dataProdPedido) && $dataProdPedido != FALSE) {
                 $dataProductos = $this->Productos_model->obtenerProductos();
-                if (isset($dataProductos) && $dataProductos != false) {
+                if (isset($dataProductos) && $dataProductos != FALSE) {
                     $nuevoProducto = 0;
                     foreach ($dataProdPedido as $item) {
                         if ($item["CodPro"] == $producto) {
                             $nuevoProducto++;
                         }
                     }
-                    
+
                     if ($nuevoProducto == 0) {
                         foreach ($dataProdPedido as $item) {
                             $dataProductoPedido = array(
@@ -2175,21 +1949,18 @@ class Clientes extends CI_Controller
                             if ($this->Pedidos_model->saveProPed($dataProductoPedido)) {
                                 $PedidoPro = $this->Pedidos_model->obtenerPedidoProUserFec($pedido, $producto, $user, $fecha);
                                 if ($PedidoPro) {
-                                    $modulo = "Productos del Cliente";
-                                    $accion = "Agregar Producto al Cliente '" . $cli_nom."'";
-                                    $tabla = "ProductosPedidos";
+                                    $dataProductoPedido['Codigo'] = $PedidoPro[0]['Codigo'];
+                                    $modulo = "Pagar Pedido";
+                                    $tabla = "Pagos";
+                                    $accion = "Confirmar Pago";
                                     $llave = $pedido;
-                                    $cliente_log = $cli_cod;
-                                    $enlace = "Clientes|Productos|" . $llave;
-                                    $dataInsert = $dataProductoPedido;
-                                    $observaciones = "Se agregó  " . $cantidad . " unidad(es) de " . $nombre . " al Cliente " . $cli_nom . " con un valor de " . money_format("%.0n", $valor);
-                                    insertLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataInsert, $observaciones);
+                                    $sql = LogSave($dataProductoPedido, $modulo, $tabla, $accion, $llave);
                                 }
                             }
                             break;
                         }
                     } else {
-                        foreach ($dataProdPedido as $item) { 
+                        foreach ($dataProdPedido as $item) {
                             if ($item["CodPro"] == $producto) {
                                 $dataProductoPedido = array(
                                     "Cantidad" => $item["Cantidad"] + $cantidad,
@@ -2198,21 +1969,16 @@ class Clientes extends CI_Controller
                                     "FechaModificacion" => $fecha
                                 );
 
-                                $dataTemp = $this->Productos_model->obtenerProductosPedidosCampos($pedido, $producto, "Cantidad, Valor, UsuarioModificacion, FechaModificacion");
-                                $dataOriginal = $dataTemp[0];
-                                $dataNew = compararCambiosLog($dataOriginal, $dataProductoPedido);
                                 if ($this->Pedidos_model->updateProPedidoxPedido($pedido, $producto, $dataProductoPedido)) {
-                                    if (count($dataNew) > 2) {
-                                        $modulo = "Productos del Cliente";
-                                        $accion = "Actualizar Producto al Cliente '" . $cli_nom."'";
-                                        $tabla = "ProductosPedidos";
+                                    $ProPedido = $this->Pedidos_model->obtenerProductosPedidosxPedido($pedido);
+                                    $modulo = "Agregar Producto";
+                                    $tabla = "ProductosPedidos";
+                                    $accion = "Actualizar Producto";
+                                    $data = compararCambiosLog($ProPedido, $dataProductoPedido);
+                                    if (count($data) > 2) {
+                                        $data['Codigo'] = $pedido;
                                         $llave = $pedido;
-                                        $cliente_log = $cli_cod;
-                                        $enlace = "Clientes|Consultar|" . $llave;
-                                        $cant = $item["Cantidad"] + $cantidad;
-                                        $val = $item["ValPP"] + $valor;
-                                        $observaciones = "Se actualizaron las unidades de " . $nombre . " a " .  $cant . " unidades, al Cliente " . $cli_nom . " con un valor de " . money_format("%.0n", $val);
-                                        updateLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataOriginal, $dataNew, $observaciones);
+                                        $sql = LogSave($data, $modulo, $tabla, $accion, $llave);
                                     }
                                 }
                                 break;
@@ -2227,27 +1993,17 @@ class Clientes extends CI_Controller
                             "UsuarioModificacion" => $user,
                             "FechaModificacion" => $fecha
                         );
-                        
-                        $dataTemp = $this->Pedidos_model->obtenerPedidoCampos($pedido, "Valor, Saldo, UsuarioModificacion, FechaModificacion");
-                        $dataOriginal = $dataTemp[0];
-                        $dataNew = compararCambiosLog($dataOriginal, $dataPedido);
+
                         if ($this->Pedidos_model->update($pedido, $dataPedido)) {
                             $dataPed = $this->Pedidos_model->obtenerPedido($pedido);
                             $modulo = "Agregar Producto";
                             $tabla = "Pedidos";
                             $accion = "Actualizar Pedido";
                             $data = compararCambiosLog($dataPed, $dataPedido);
-                            if (count($dataNew) > 2) {
-                                $modulo = "Productos del Cliente";
-                                $accion = "Agregar Producto al Cliente '" . $cli_nom."'";
-                                $tabla = "Pedidos";
+                            if (count($data) > 2) {
+                                $data['Codigo'] = $pedido;
                                 $llave = $pedido;
-                                $cliente_log = $cli_cod;
-                                $enlace = "Clientes|Productos|" . $llave;
-                                $sal = $item["Saldo"] + $valor;
-                                $val = $item["Valor1"] + $valor;
-                                $observaciones = "Se actualiza Valor y Saldo del Cliente " . $cli_nom . "\nValor: " . money_format("%.0n", $val) . "\nSaldo: " . money_format("%.0n", $sal);
-                                updateLog($modulo, $accion, $tabla, $llave, $cliente_log, $enlace, $dataOriginal, $dataNew, $observaciones);
+                                $sql = LogSave($data, $modulo, $tabla, $accion, $llave);
                             }
 
                             $obs = "Se agregó  " . $cantidad . " unidad(es) de <b>" . $nombre . "</b> al Cliente <b>" . $item["NombreCliente"] . "</b> con un valor de <b>" . money_format("%.0n", $valor) . "</b>";
@@ -2268,21 +2024,6 @@ class Clientes extends CI_Controller
         }
     }
 
-    public function DeleteProducto()
-    {
-        $pedido = trim($this->input->post('pedido'));
-        $producto = trim($this->input->post('producto'));
-        if (isset($pedido)) {
-            $dataProdPedido = $this->Pedidos_model->obtenerProductosPedidoCliente($pedido);
-            if (isset($dataProdPedido) && $dataProdPedido != false) {
-                echo $numeroProductos = count(dataProdPedido);
-            } else {
-                $this->session->set_flashdata("error", "No se puede acceder a los productos del Pedido del Cliente");
-                redirect(base_url() . "Clientes/Admin/");
-            }
-        } else {
-            $this->session->set_flashdata("error", "No se puede acceder a los datos del Pedido del Cliente");
-            redirect(base_url() . "Clientes/Admin/");
-        }
-    }
 }
+
+?>

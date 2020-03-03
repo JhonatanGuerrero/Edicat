@@ -68,19 +68,38 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                                         <a href="<?= base_url() . "Clientes/Consultar/" . $item["CodCliente"] . "/"; ?>" title="Consultar Cliente"><i class="fa fa-search" aria-hidden="true" style="padding:5px;"></i></a>
                                                         <?php
                                                     }
-                                                                                                        
-                                                    if ($item["EstNombre"] == "Debe") {
-                                                        ?>
-                                                        <a href="<?= base_url() . "Pagos/Generar/" . $item["CodCliente"] . "/"; ?>" title="Pagar Saldo"><i class="fa fa-motorcycle" aria-hidden="true" style="padding:5px;"></i></a>
-                                                        <?php
-                                                    } else if ($item["EstNombre"] == "En Mora") {
-                                                        ?>
-                                                        <a href="<?= base_url() . "Pagos/PagarMora/" . $item["Codigo"] . "/"; ?>" title="Quitar Mora"><i class="fa fa-motorcycle" aria-hidden="true" style="padding:5px;"></i></a>
-                                                        <?php
-                                                    } 
-                                                    ?>
-                                                    <a href="#ModalDevol" data-toggle="modal" title="Devolución del Cliente" onclick="DatosModal('<?= $item["Codigo"]; ?>', '<?= $item["Cliente"]; ?>', '<?= $item["Nombre"]; ?>', '<?= $item["Saldo"]; ?>', '<?= $item["Cuotas"]; ?>');"><i class="fa fa-reply-all" aria-hidden="true" style="padding:5px;"></i></a>
                                                     
+                                                    $idPermiso = 19;
+                                                    $accion = validarPermisoAcciones($idPermiso);
+                                                    if ($accion) {
+                                                                                                        
+                                                        if ($item["EstNombre"] == "Debe") {
+                                                            ?>
+                                                            <a href="<?= base_url() . "Pagos/Generar/" . $item["CodCliente"] . "/"; ?>" title="Pagar Saldo"><i class="fa fa-motorcycle" aria-hidden="true" style="padding:5px;"></i></a>
+                                                            <?php
+                                                        } else if ($item["EstNombre"] == "En Mora") {
+                                                            ?>
+                                                            <a href="<?= base_url() . "Pagos/PagarMora/" . $item["Codigo"] . "/"; ?>" title="Quitar Mora"><i class="fa fa-motorcycle" aria-hidden="true" style="padding:5px;"></i></a>
+                                                            <?php
+                                                        } 
+                                                    }
+                                                    
+                                                    $idPermiso = 90;
+                                                    $accion = validarPermisoAcciones($idPermiso);
+                                                    if ($accion) {
+                                                    ?>
+                                                        <a href="#ModalDevol" data-toggle="modal" title="Devolución del Cliente" onclick="DatosModal('<?= $item["Codigo"]; ?>', '<?= $item["Cliente"]; ?>', '<?= $item["Nombre"]; ?>', '<?= $item["Saldo"]; ?>', '<?= $item["Cuotas"]; ?>');"><i class="fa fa-reply-all" aria-hidden="true" style="padding:5px;"></i></a>
+                                                    <?php
+                                                    }
+                                                    
+                                                    $idPermiso = 26;
+                                                    $accion = validarPermisoAcciones($idPermiso);
+                                                    if ($accion) {
+                                                        ?>
+                                                        <a href = "<?= base_url() . "Clientes/Log/" . $item["Codigo"] . "/"; ?>" title = "Registros del Cliente"><i class = "fa fa-list-alt" aria-hidden = "true" style = "padding:5px;"></i></a>
+                                                        <?php
+                                                    }
+                                                    ?>
                                                 </div>                                        
                                             </td>
                                         </tr>

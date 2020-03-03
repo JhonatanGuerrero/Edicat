@@ -52,15 +52,12 @@ class Referencias_model extends CI_Model {
         }
     }
 
-    public function obtenerRefClienteCodUserFec($cliente, $Referencia, $user, $fecha, $orden = null) {
+    public function obtenerRefClienteCodUserFec($cliente, $Referencia, $user, $fecha) {
         $this->db->where('Cliente', $cliente);
         $this->db->where('Referencia', $Referencia);
         $this->db->where('UsuarioCreacion', $user);
         $this->db->where('FechaCreacion', $fecha);
         $this->db->where('Habilitado', '1');
-        if ($orden == "DESC"){
-            $this->db->order_by("Codigo", "DESC");
-        }
         $query = $this->db->get("ReferenciasCliente");
         if ($query->num_rows() <= 0) {
             return false;

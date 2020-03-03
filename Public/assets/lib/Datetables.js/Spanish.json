@@ -12,7 +12,7 @@
 	"sSearch":         "Buscar:",
 	"sUrl":            "",
 	"sInfoThousands":  ",",
-	"sLoadingRecords": "Cargando...",
+	"sLoadingRecords": "<i class='fa fa-spinner fa-spin'></i> Cargando...",
 	"oPaginate": {
 		"sFirst":    "Primero",
 		"sLast":     "Último",

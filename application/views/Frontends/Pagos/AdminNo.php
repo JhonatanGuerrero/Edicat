@@ -96,6 +96,18 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                         <input type="text" value="" class="form-control" readonly id="modal-Telefono" name="modal-Telefono">
                                     </div>
                                 </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">                                
+                                        <label>Barrio:</label>
+                                        <input type="text" value="" class="form-control" readonly id="modal-Barrio" name="modal-Barrio">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">                                
+                                        <label>Saldo:</label>
+                                        <input type="text" value="" class="form-control" readonly id="modal-Saldo" name="modal-Saldo">
+                                    </div>
+                                </div>
                             </div>
                             <div class="row" >
                                 <div class="col-md-12">
@@ -249,6 +261,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                 $('#modal-nombre').val(nombre);
                 $('#modal-Direccion').val(direccion);
                 $('#modal-Telefono').val(telefono);
+                $('#modal-Barrio').val(barrio);
+                $('#modal-Saldo').val(saldo);
                 $('#motivo').val("");
                 $('#FechaProgramada').val("");
                 $('#FechaPago').val("");

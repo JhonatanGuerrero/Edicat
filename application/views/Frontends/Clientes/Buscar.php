@@ -70,7 +70,13 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                             <input type="text" name="nombre" id="nombre" class="form-control">
                                         </div>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-md-2">
+                                        <div class="form-group">
+                                            <label for="cedula">Cédula:</label>
+                                            <input type="text" name="cedula" id="cedula" class="form-control">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
                                         <div class="form-group">
                                             <label for="direccion">Direccion:</label>
                                             <input type="text" name="direccion" id="direccion" class="form-control">
@@ -278,6 +284,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                     e.preventDefault();
                     $('#message').html("");
                     $('#nombre').val("");
+                    $('#cedula').val("");
                     $('#direccion').val("");
                     $('#telefono').val("");
                     $('#selectEstados').val("");
@@ -287,8 +294,12 @@ defined('BASEPATH') OR exit('No direct script access allowed');
             });
 
             function buscar() {
+                var table =$('#<?= $Controller; ?>').DataTable();
+                table.clear().draw();
                 $('#message').html("");
+                $('#btn-buscar').html('<i class="fa-li fa fa-spinner fa-pulse"></i> Buscando...');
                 var nombre = $('#nombre').val();
+                var cedula = $('#cedula').val();
                 var direccion = $('#direccion').val();
                 var telefono = $('#telefono').val();
                 var selectEstados = $('#selectEstados').val();
@@ -298,12 +309,13 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                     'cursor': 'wait'
                 })
 
-                listarFiltro(nombre, direccion, telefono, selectEstados, ubicacion);
+                listarFiltro(nombre, cedula, direccion, telefono, selectEstados, ubicacion);
                 
                 $("body").css({
                     'cursor': 'Default'
                 })
-
+                
+                $('#btn-buscar').html('<i class="fa fa-search"></i> Buscar Clientes');
                 return false;
             }
 
@@ -320,7 +332,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
             }
 
 
-            function listarFiltro(nombre, direccion, telefono, selectEstados, ubicacion) {
+            function listarFiltro(nombre, cedula, direccion, telefono, selectEstados, ubicacion) {
                 $('#<?= $Controller; ?>').DataTable({
                     bDestroy: true,
                     responsive: true,
@@ -339,7 +351,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                         method: 'post',
                         url: "<?= base_url(); ?>Clientes/SearchJson/",
                         data: {
-                            nombre: nombre, direccion: direccion, telefono: telefono, estado: selectEstados, ubicacion: ubicacion
+                            nombre: nombre, cedula: cedula, direccion: direccion, telefono: telefono, estado: selectEstados, ubicacion: ubicacion
                         }
                     },
                     language: {

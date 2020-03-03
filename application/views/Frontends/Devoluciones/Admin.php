@@ -98,6 +98,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
             });
 
             function listar() {
+                var table =$('#<?= $Controller; ?>').DataTable();
+                table.clear().draw();
                 $('#<?= $Controller; ?>').DataTable({
                     bDestroy: true,
                     responsive: true,

@@ -1,11 +1,10 @@
 <?php
 
-defined('BASEPATH') or exit('No direct script access allowed');
+defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Pedidos_model extends CI_Model
-{
-    public function obtenerPedidos()
-    {
+class Pedidos_model extends CI_Model {
+
+    public function obtenerPedidos() {
         $this->db->where('Habilitado', '1');
         $query = $this->db->get("Pedidos");
         if ($query->num_rows() <= 0) {
@@ -15,8 +14,7 @@ class Pedidos_model extends CI_Model
         }
     }
 
-    public function obtenerProductosPedidosxPedido($pedido)
-    {
+    public function obtenerProductosPedidosxPedido($pedido) {
         $this->db->where('Pedido', $pedido);
         $query = $this->db->get("ProductosPedidos");
         if ($query->num_rows() <= 0) {
@@ -26,8 +24,7 @@ class Pedidos_model extends CI_Model
         }
     }
 
-    public function obtenerProductosPedidosxPedPro($pedido, $producto)
-    {
+    public function obtenerProductosPedidosxPedPro($pedido, $producto) {
         $this->db->where('Pedido', $pedido);
         $this->db->where('Producto', $producto);
         $query = $this->db->get("ProductosPedidos");
@@ -38,8 +35,7 @@ class Pedidos_model extends CI_Model
         }
     }
 
-    public function obtenerPedidosActivos($pedido = null)
-    {
+    public function obtenerPedidosActivos($pedido = null) {
         $this->db->select('p.*, c.Estado as EstCliente');
         $this->db->from('Pedidos as p');
         $this->db->join('Clientes as c', 'p.Cliente = c.Codigo');
@@ -51,6 +47,7 @@ class Pedidos_model extends CI_Model
         $this->db->where('p.Estado !=', $this->config->item('ped_paz')); //Paz y Salvo
         $this->db->where('p.Habilitado', '1');
         $query = $this->db->get();
+        //echo $this->db->last_query()."<br><br>";
         if ($query->num_rows() <= 0) {
             return false;
         } else {
@@ -58,8 +55,7 @@ class Pedidos_model extends CI_Model
         }
     }
 
-    public function obtenerPedidosDeben()
-    {
+    public function obtenerPedidosDeben() {
         $this->db->where('Estado', '112'); //Deuda
         $this->db->where('Saldo >', 0);
         $this->db->where('Habilitado', '1');
@@ -71,8 +67,7 @@ class Pedidos_model extends CI_Model
         }
     }
 
-    public function obtenerPedidosDatacredito()
-    {
+    public function obtenerPedidosDatacredito() {
         $this->db->where("(Estado = '125' OR Estado = '127')"); //Datacredito - Reportado
         $this->db->where('Saldo >', 0);
         $this->db->where('Habilitado', '1');
@@ -84,8 +79,7 @@ class Pedidos_model extends CI_Model
         }
     }
 
-    public function obtenerPedido($cod)
-    {
+    public function obtenerPedido($cod) {
         $this->db->where('Codigo', $cod);
         $this->db->where('Habilitado', '1');
         $query = $this->db->get("Pedidos");
@@ -96,29 +90,15 @@ class Pedidos_model extends CI_Model
         }
     }
 
-    public function obtenerPedidoCampos($cod, $select)
-    {
-        $this->db->select($select);
-        $this->db->where('Codigo', $cod);
-        $query = $this->db->get("Pedidos");
-        //echo $this->db->last_query()."<br><br>";
-        if ($query->num_rows() <= 0) {
-            return false;
-        } else {
-            return $query->result_array();
-        }
-    }
-
-    public function obtenerPedidosCliente($cliente)
-    {
+    public function obtenerPedidosCliente($cliente) {
         $this->db->select('p.*, e.Nombre as EstNombre, v.Nombre as NomVen, t.Cuotas as NumCuotas, t.ValorCuota as ValCuota');
         $this->db->from('Pedidos as p');
         $this->db->join('Tarifas as t', 'p.Tarifa = t.Codigo');
         $this->db->join('Vendedores as v', 'p.Vendedor = v.Codigo');
         $this->db->join('Estados as e', 'p.Estado = e.Codigo');
         $this->db->where('p.Cliente', $cliente);
-        // $this->db->where('p.Estado !=', $this->config->item('ped_devol'));
-        // $this->db->where('p.Estado !=', $this->config->item('ped_paz'));
+        $this->db->where('p.Estado !=', $this->config->item('ped_devol'));
+        $this->db->where('p.Estado !=', $this->config->item('ped_paz'));
         $this->db->where('p.Habilitado', '1');
         $query = $this->db->get();
         if ($query->num_rows() <= 0) {
@@ -128,8 +108,7 @@ class Pedidos_model extends CI_Model
         }
     }
 
-    public function obtenerPedidosClientePorPedido($pedido)
-    {
+    public function obtenerPedidosClientePorPedido($pedido) {
         $this->db->select('p.*, e.Nombre as EstNombre, v.Nombre as NomVen, t.Cuotas as NumCuotas, t.ValorCuota as ValCuota');
         $this->db->from('Pedidos as p');
         $this->db->join('Tarifas as t', 'p.Tarifa = t.Codigo');
@@ -147,8 +126,7 @@ class Pedidos_model extends CI_Model
         }
     }
 
-    public function obtenerPedidosClienteAll($cliente)
-    {
+    public function obtenerPedidosClienteAll($cliente) {
         $this->db->select('p.*, e.Nombre as EstNombre, v.Nombre as NomVen, t.Cuotas as NumCuotas, t.ValorCuota as ValCuota');
         $this->db->from('Pedidos as p');
         $this->db->join('Tarifas as t', 'p.Tarifa = t.Codigo');
@@ -164,8 +142,7 @@ class Pedidos_model extends CI_Model
         }
     }
 
-    public function obtenerPaginaFisicaPorPedido($pedido)
-    {
+    public function obtenerPaginaFisicaPorPedido($pedido) {
         $this->db->select('PaginaFisica');
         $this->db->where('pe.Codigo', $pedido);
         $query = $this->db->get("Pedidos");
@@ -176,8 +153,7 @@ class Pedidos_model extends CI_Model
         }
     }
 
-    public function obtenerClientePorPedido($pedido)
-    {
+    public function obtenerClientePorPedido($pedido) {
         $this->db->select('pe.*, cl.*, d.*, d.Direccion as Dir');
         $this->db->from('Pedidos as pe');
         $this->db->join('Clientes as cl', 'cl.Codigo = pe.Cliente');
@@ -192,10 +168,11 @@ class Pedidos_model extends CI_Model
         }
     }
 
-    public function obtenerPedidoCliente($pedido)
-    {
-        $this->db->select('pe.Codigo as CodPedido, c.Nombre as NombreCliente, pe.*, e.Nombre as EstNombre, pe.Valor as Valor1, t.Nombre as NomTarifa, t.Descuento as Descuento, t.Cuotas as NumCuotas, t.ValorCuota as ValCuota');
+    public function obtenerProductosPedidoCliente($pedido) {
+        $this->db->select('pe.Codigo as CodPedido, c.Nombre as NombreCliente, pe.*, e.Nombre as EstNombre, pe.Valor as Valor1, pp.*, pp.Valor as ValPP, t.*, productos.Codigo as CodPro, productos.nombre as NomPro, t.Nombre as NomTarifa, productos.Valor as ValTarifa, t.Descuento as Descuento, t.Cuotas as NumCuotas, t.ValorCuota as ValCuota');
         $this->db->from('Pedidos as pe');
+        $this->db->join('ProductosPedidos as pp', 'pe.Codigo = pp.Pedido');
+        $this->db->join('Productos as productos', 'productos.Codigo = pp.Producto');
         $this->db->join('Tarifas as t', 't.Codigo = pe.Tarifa');
         $this->db->join('Estados as e', 'pe.Estado = e.Codigo');
         $this->db->join('Clientes as c', 'pe.Cliente = c.Codigo');
@@ -212,48 +189,7 @@ class Pedidos_model extends CI_Model
         }
     }
 
-    public function obtenerPedidoClienteAll($pedido)
-    {
-        $this->db->select('pe.Codigo as CodPedido, c.Nombre as NombreCliente, c.Codigo as CodCliente, pe.*, e.Nombre as EstNombre, pe.Valor as Valor1, t.Nombre as NomTarifa, t.Descuento as Descuento, t.Cuotas as NumCuotas, t.ValorCuota as ValCuota');
-        $this->db->from('Pedidos as pe');
-        $this->db->join('Tarifas as t', 't.Codigo = pe.Tarifa');
-        $this->db->join('Estados as e', 'pe.Estado = e.Codigo');
-        $this->db->join('Clientes as c', 'pe.Cliente = c.Codigo');
-        $this->db->where('pe.Codigo', $pedido);
-        $this->db->where('pe.Habilitado', '1');
-        $query = $this->db->get();
-        //echo $this->db->last_query()."<br><br>";
-        if ($query->num_rows() <= 0) {
-            return false;
-        } else {
-            return $query->result_array();
-        }
-    }
-
-    public function obtenerProductosPedidoCliente($pedido)
-    {
-        $this->db->select('pe.Codigo as CodPedido, c.Nombre as NombreCliente, c.Codigo as CodCliente, pe.*, e.Nombre as EstNombre, pe.Valor as Valor1, pp.*, pp.Valor as ValPP, t.*, productos.Codigo as CodPro, productos.nombre as NomPro, t.Nombre as NomTarifa, productos.Valor as ValTarifa, t.Descuento as Descuento, t.Cuotas as NumCuotas, t.ValorCuota as ValCuota');
-        $this->db->from('Pedidos as pe');
-        $this->db->join('ProductosPedidos as pp', 'pe.Codigo = pp.Pedido');
-        $this->db->join('Productos as productos', 'productos.Codigo = pp.Producto');
-        $this->db->join('Tarifas as t', 't.Codigo = pe.Tarifa');
-        $this->db->join('Estados as e', 'pe.Estado = e.Codigo');
-        $this->db->join('Clientes as c', 'pe.Cliente = c.Codigo');
-        $this->db->where('pe.Codigo', $pedido);
-        // $this->db->where('pe.Estado !=', $this->config->item('ped_devol'));
-        // $this->db->where('pe.Estado !=', $this->config->item('ped_paz'));
-        $this->db->where('pe.Habilitado', '1');
-        $query = $this->db->get();
-        //echo $this->db->last_query()."<br><br>";
-        if ($query->num_rows() <= 0) {
-            return false;
-        } else {
-            return $query->result_array();
-        }
-    }
-
-    public function obtenerProductosPedidoClienteAll($pedido)
-    {
+    public function obtenerProductosPedidoClienteAll($pedido) {
         $this->db->select('pe.Codigo as CodPedido, pe.*, e.Nombre as EstNombre, pe.Valor as Valor1, pp.*, t.*, productos.nombre as NomPro, t.Nombre as NomTarifa, t.Descuento as Descuento, t.Cuotas as NumCuotas, t.ValorCuota as ValCuota');
         $this->db->from('Pedidos as pe');
         $this->db->join('ProductosPedidos as pp', 'pe.Codigo = pp.Pedido');
@@ -270,8 +206,7 @@ class Pedidos_model extends CI_Model
         }
     }
 
-    public function obtenerPedidoPorCliente($cliente)
-    {
+    public function obtenerPedidoPorCliente($cliente) {
         $this->db->where('Cliente', $cliente);
         $this->db->where('Saldo >=', 0);
         $this->db->where('Valor >=', 0);
@@ -285,8 +220,7 @@ class Pedidos_model extends CI_Model
         }
     }
 
-    public function obtenerSaldoValorPedidoCod($pedido)
-    {
+    public function obtenerSaldoValorPedidoCod($pedido) {
         $this->db->select('pe.Saldo as Saldo');
         $this->db->from('Pedidos as pe');
         $this->db->where('pe.Codigo', $pedido);
@@ -299,8 +233,7 @@ class Pedidos_model extends CI_Model
         }
     }
 
-    public function obtenerPedidoCliValUserFec($cliente, $DiaCobro, $user, $fecha)
-    {
+    public function obtenerPedidoCliValUserFec($cliente, $DiaCobro, $user, $fecha) {
         $this->db->where('Cliente', $cliente);
         $this->db->where('DiaCobro', $DiaCobro);
         $this->db->where('UsuarioCreacion', $user);
@@ -314,8 +247,7 @@ class Pedidos_model extends CI_Model
         }
     }
 
-    public function obtenerPedidoCliValUserFecLast($cliente, $DiaCobro, $user, $fecha)
-    {
+    public function obtenerPedidoCliValUserFecLast($cliente, $DiaCobro, $user, $fecha) {
         $this->db->where('Cliente', $cliente);
         $this->db->where('DiaCobro', $DiaCobro);
         $this->db->where('UsuarioCreacion', $user);
@@ -330,8 +262,7 @@ class Pedidos_model extends CI_Model
         }
     }
 
-    public function obtenerPedidoProUserFec($pedido, $producto, $user, $fecha)
-    {
+    public function obtenerPedidoProUserFec($pedido, $producto, $user, $fecha) {
         $this->db->where('Pedido', $pedido);
         $this->db->where('Producto', $producto);
         $this->db->where('UsuarioCreacion', $user);
@@ -345,8 +276,7 @@ class Pedidos_model extends CI_Model
         }
     }
 
-    public function save($data)
-    {
+    public function save($data) {
         if ($this->db->insert("Pedidos", $data)) {
             return $error = $this->db->error();
         } else {
@@ -354,8 +284,7 @@ class Pedidos_model extends CI_Model
         }
     }
 
-    public function saveProPed($data)
-    {
+    public function saveProPed($data) {
         if ($this->db->insert("ProductosPedidos", $data)) {
             return $error = $this->db->error();
         } else {
@@ -363,8 +292,7 @@ class Pedidos_model extends CI_Model
         }
     }
 
-    public function saveValDeuda($data)
-    {
+    public function saveValDeuda($data) {
         if ($this->db->insert("ValidacionDeudas", $data)) {
             return $error = $this->db->error();
         } else {
@@ -372,8 +300,7 @@ class Pedidos_model extends CI_Model
         }
     }
 
-    public function update($codigo, $data)
-    {
+    public function update($codigo, $data) {
         $this->db->where("Codigo", $codigo);
         if ($this->db->update("Pedidos", $data)) {
             return $error = $this->db->error();
@@ -382,8 +309,7 @@ class Pedidos_model extends CI_Model
         }
     }
 
-    public function updateProPedidoxPedido($pedido, $producto, $data)
-    {
+    public function updateProPedidoxPedido($pedido, $producto, $data) {
         $this->db->where("Pedido", $pedido);
         $this->db->where("Producto", $producto);
         if ($this->db->update("ProductosPedidos", $data)) {
@@ -393,8 +319,7 @@ class Pedidos_model extends CI_Model
         }
     }
 
-    public function updateValDeuda($codigo, $data)
-    {
+    public function updateValDeuda($codigo, $data) {
         $this->db->where("Codigo", $codigo);
         if ($this->db->update("ValidacionDeudas", $data)) {
             return $error = $this->db->error();
@@ -403,8 +328,7 @@ class Pedidos_model extends CI_Model
         }
     }
 
-    public function LogPedido($pedido)
-    {
+    public function LogPedido($pedido) {
         $this->db->like('Modulo', 'Pedido');
         $this->db->where('Llave', $pedido);
         $query = $this->db->get("Log");
@@ -415,8 +339,7 @@ class Pedidos_model extends CI_Model
         }
     }
 
-    public function valPedido($pedido)
-    {
+    public function valPedido($pedido) {
         $this->db->where('Pedido', $pedido);
         $query = $this->db->get("ValidacionDeudas");
         if ($query->num_rows() <= 0) {
@@ -427,8 +350,7 @@ class Pedidos_model extends CI_Model
     }
 
     //Contar Pedidos
-    public function contarPedidos($fechaI, $fechaF)
-    {
+    public function contarPedidos($fechaI, $fechaF) {
         $this->db->select('Count(*) as Num');
         $this->db->where('DiaCobro >=', $fechaI);
         $this->db->where('DiaCobro <=', $fechaF);
@@ -440,4 +362,7 @@ class Pedidos_model extends CI_Model
             return $query->result_array();
         }
     }
+
 }
+
+?>

@@ -53,21 +53,6 @@ class Usuarios_model extends CI_Model {
         }
     }
 
-    public function obtenerUsuarioAsignadoPorCliente($cliente)  
-    { 
-        $this->db->select('u.Codigo as Codigo');
-        $this->db->from('Usuarios as u');
-        $this->db->join('ClientesUsuarios as cu', 'u.Codigo = cu.Usuario');
-        $this->db->where('cu.Cliente', $cliente);
-        $query = $this->db->get();
-        //echo $this->db->last_query();
-        if ($query->num_rows() <= 0) {
-            return false;
-        } else {
-            return $query->result_array();
-        }
-    }
-
     public function obtenerUsuariosEP() {
         $this->db->select('u.Codigo, u.Usuario, u.Nombre, u.Perfil as PerfilId, p.Nombre as Perfil, u.Estado as EstadoId, e.Nombre as Estado');
         $this->db->from('Usuarios as u');
@@ -77,7 +62,6 @@ class Usuarios_model extends CI_Model {
         //$this->db->where('u.Estado', '101');
         $this->db->where('u.Habilitado', '1');
         $query = $this->db->get();
-        //echo $this->db->last_query();
         if ($query->num_rows() <= 0) {
             return false;
         } else {
