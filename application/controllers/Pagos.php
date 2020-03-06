@@ -1900,29 +1900,6 @@ class Pagos extends CI_Controller {
             redirect(base_url() . $ReturnUrl);
         }
     }
-
-    public function valDeudaSave($pedido, $cliente, $dia, $estado) {
-        //Datos Auditoría
-        $user = $this->session->userdata('Usuario');
-        $fecha = date("Y-m-d H:i:s");
-        $fechaValidacion = date("Y-m-d");
-
-        $data = array(
-            "Pedido" => $pedido,
-            "Cliente" => $cliente,
-            "FechaValidacion" => $fechaValidacion,
-            "Dias" => $dia,
-            "Estado" => $estado,
-            "Observaciones" => "Validación de Deuda y Cambio de Estado\nNuevo Estado: " . $estado . "\n\nObservación Automática.",
-            "UsuarioCreacion" => $user,
-            "FechaCreacion" => $fecha
-        );
-        try {
-            $this->Pedidos_model->saveValDeuda($data);
-        } catch (Exception $e) {
-            return 'Ha habido una excepción: ' . $e->getMessage() . "<br>";
-        }
-    }
  
     public function PagarMora($pedido) {
         $dataPedido = $this->Pedidos_model->obtenerPedidosClientePorPedido($pedido);

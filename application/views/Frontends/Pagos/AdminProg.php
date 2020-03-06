@@ -96,7 +96,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
         </div>  
 
         <div class="modal fade " id="ModalConfirmarPago" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog">
                 <div class="modal-content">
                     <form method="POST" name="form-modal" id="form-modal">
                         <div class="modal-header">
@@ -130,14 +130,14 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                         <label>Nombre</label>
                                         <input type="text" id="modal-nombre-confirmar" name="modal-nombre-confirmar" class="form-control" readonly style="background-color:#ffffff;">
                                     </div>
-                                </div> 
-                                <div class="col-md-4">
+                                </div>
+                                <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Recibo de Pago</label>
                                         <input type="text" id="modal-Pago-confirmar1" name="modal-Pago-confirmar1" class="form-control" readonly style="background-color:#ffffff;">
                                     </div>
                                 </div>                 
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Saldo Programado</label>
                                         <input type="text" id="modal-Saldo-confirmar1" name="modal-Saldo-confirmar1" class="form-control" readonly style="background-color:#ffffff;">
@@ -148,8 +148,20 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                         <label>Valor</label>
                                         <input type="number" id="modal-Valor-confirmar" name="modal-Valor-confirmar" class="form-control" style="background-color:#ffffff;">
                                     </div>  
+                                </div>                                                                  
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Pago Real</label>
+                                        <input type="number" id="modal-Pago-confirmar" name="modal-Valor-confirmar" class="form-control" style="background-color:#ffffff;">
+                                    </div>  
+                                </div>  
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Saldo Real</label>
+                                        <input type="text" id="modal-Saldo-confirmar" name="modal-Saldo-confirmar" class="form-control" readonly style="background-color:#ffffff;">
+                                    </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Cobrador:</label>
                                         <select name="Cobrador-confirmar" id="Cobrador-confirmar" class="form-control required">
@@ -161,32 +173,32 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                             ?>                                    
                                         </select>
                                     </div>
-                                </div>                                                         
-                                <div class="col-md-4">
+                                </div>
+                                <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Pago Real</label>
                                         <input type="number" id="modal-Pago-confirmar" name="modal-Valor-confirmar" class="form-control" style="background-color:#ffffff;">
                                     </div>  
                                 </div>  
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Saldo Real</label>
                                         <input type="text" id="modal-Saldo-confirmar" name="modal-Saldo-confirmar" class="form-control" readonly style="background-color:#ffffff;">
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <div class="form-group">
                                         <label>Fecha de Pago:</label>
                                         <input type="text" id="FechaPago-confirmar" name="FechaPago-confirmar" class="form-control datepicker8">
                                     </div>
-                                </div> 
-                                <div class="col-md-4 col-md-offset-4">
+                                </div>
+                                <div class="col-md-6">
                                     <div class="form-group">
                                         <label><span class="label label-success ">Fecha Actual Pago: </span></label>
                                         <input type="text" id="FechaPago-actual" name="FechaPago-actual" class="form-control" readonly>                                        
                                     </div>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <div class="form-group">
                                         <label><span class="label label-danger">Fecha Próximo Pago: </span></label>
                                         <input type="text" id="FechaPago-proximo" name="FechaPago-proximo" class="form-control datepicker1">                                        
@@ -206,13 +218,13 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                         <textarea value="" rows="3" class="form-control" name="Observaciones-confirmar" id="Observaciones-confirmar" style="resize: none;"></textarea>
                                     </div>
                                 </div>
-                            </div>       
-                            <div class="row">                          
+                            </div>
+                            <div class="row">                                
                                 <div class="col-md-12">
                                     <p class="error-text" style="margin-top:5px;">
                                         <i class="fa fa-check modal-icon" style="margin-top:-10px;"></i>¿Desea Confirmar este Pago?
                                     </p>
-                                </div> 
+                                </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-12" id="message-confirmar">
@@ -513,7 +525,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                 });
             });
 
-            function listar() {
+           function listar() {
                 var pag_usu = $('#dropUsuario').val();
                 var pag_fec1 = $('#FechaIni').val();
                 var pag_fec2 = $('#FechaFin').val();
@@ -581,6 +593,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                 var pag_usu = $('#dropUsuario').val();
                 var pag_fec1 = date("Y-m-d");
                 var pag_fec2 = date("Y-m-d");
+                // var pag_fec1 = $('#FechaIni').val();
+                // var pag_fec2 = $('#FechaFin').val();
 
                 $('#<?= $Controller; ?>').DataTable({
                     bDestroy: true,
@@ -658,7 +672,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                 $('#modal-Saldo-confirmar').val(saldo);
                 $('#modal-cliente-confirmar').val(cliente);
                 $('#modal-pedido-confirmar').val(pedido);
-                $('#modal-nombre-confirmar').val(nombre);                
+                $('#modal-nombre-confirmar').val(nombre);         
                 $('#FechaPago-actual').val(diacobro);
                 $('#FechaPago-proximo').val(nuevoDiaCobro);
                 $('#Cobrador-confirmar').val("");
