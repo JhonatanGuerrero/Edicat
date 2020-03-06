@@ -176,18 +176,6 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label>Pago Real</label>
-                                        <input type="number" id="modal-Pago-confirmar" name="modal-Valor-confirmar" class="form-control" style="background-color:#ffffff;">
-                                    </div>  
-                                </div>  
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label>Saldo Real</label>
-                                        <input type="text" id="modal-Saldo-confirmar" name="modal-Saldo-confirmar" class="form-control" readonly style="background-color:#ffffff;">
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
                                         <label>Fecha de Pago:</label>
                                         <input type="text" id="FechaPago-confirmar" name="FechaPago-confirmar" class="form-control datepicker8">
                                     </div>
@@ -201,7 +189,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label><span class="label label-danger">Fecha Próximo Pago: </span></label>
-                                        <input type="text" id="FechaPago-proximo" name="FechaPago-proximo" class="form-control datepicker1">                                        
+                                        <input type="text" id="FechaPago-proximo" name="FechaPago-proximo" class="form-control datepicker1" readonly>
                                     </div>
                                 </div>
                             </div>
@@ -215,17 +203,17 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                 <div class="col-md-12">
                                     <div class="form-group">
                                         <label>Observaciones</label>
-                                        <textarea value="" rows="3" class="form-control" name="Observaciones-confirmar" id="Observaciones-confirmar" style="resize: none;"></textarea>
+                                        <textarea value="" rows="2" class="form-control" name="Observaciones-confirmar" id="Observaciones-confirmar" style="resize: none;"></textarea>
                                     </div>
                                 </div>
                             </div>
-                            <div class="row">                                
+                            <!--<div class="row">                                
                                 <div class="col-md-12">
                                     <p class="error-text" style="margin-top:5px;">
                                         <i class="fa fa-check modal-icon" style="margin-top:-10px;"></i>¿Desea Confirmar este Pago?
                                     </p>
                                 </div>
-                            </div>
+                            </div>-->
                             <div class="row">
                                 <div class="col-md-12" id="message-confirmar">
                                 </div>
@@ -672,13 +660,15 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                 $('#modal-Saldo-confirmar').val(saldo);
                 $('#modal-cliente-confirmar').val(cliente);
                 $('#modal-pedido-confirmar').val(pedido);
-                $('#modal-nombre-confirmar').val(nombre);         
-                $('#FechaPago-actual').val(diacobro);
-                $('#FechaPago-proximo').val(nuevoDiaCobro);
+                $('#modal-nombre-confirmar').val(nombre);
+                $('#FechaPago-actual').val("Aún no funciona");
+                $('#FechaPago-proximo').val("Aún no funciona");
+                // $('#FechaPago-actual').val(diacobro);
+                // $('#FechaPago-proximo').val(nuevoDiaCobro);
                 $('#Cobrador-confirmar').val("");
                 $('#FechaPago-confirmar').val("");
                 $('#ObservacionesAnt-confirmar').html(observaciones);
-                var ob = "Se confirma que el cliente pagó $ " + pago + " el día de hoy. ";
+                var ob = "Se confirma que el cliente pagó " + pago + " el día de hoy. ";
                 $('#Observaciones-confirmar').text(ob);
                 $('#message-confirmar').text("");
             }
