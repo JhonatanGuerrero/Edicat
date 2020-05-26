@@ -181,15 +181,15 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="form-group">
+                                    <div class="form-group hidden">
                                         <label><span class="label label-success ">Fecha Actual Pago: </span></label>
-                                        <input type="text" id="FechaPago-actual" name="FechaPago-actual" class="form-control" readonly>                                        
+                                        <input type="text" id="FechaPago-actual" name="FechaPago-actual" class="form-control datepicker45" readonly>                                        
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <label><span class="label label-danger">Fecha Próximo Pago: </span></label>
-                                        <input type="text" id="FechaPago-proximo" name="FechaPago-proximo" class="form-control datepicker1" readonly>
+                                        <input type="text" id="FechaPago-proximo" name="FechaPago-proximo" class="form-control datepicker45">
                                     </div>
                                 </div>
                             </div>
@@ -436,6 +436,14 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                     minDate: HomeDate,
                     maxDate: MaxDate
                 });
+
+                $('.datepicker45').datetimepicker({
+                    format: 'DD/MM/YYYY',
+                    locale: 'es', 
+                    minDate: todayDate,
+                    maxDate: MaxDate
+                });
+                
                 $('.datepicker8').datetimepicker({
                     format: 'DD/MM/YYYY',
                     locale: 'es',
@@ -578,11 +586,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
             }
 
             function filtrar() {
-                var pag_usu = $('#dropUsuario').val();
-                var pag_fec1 = date("Y-m-d");
-                var pag_fec2 = date("Y-m-d");
-                // var pag_fec1 = $('#FechaIni').val();
-                // var pag_fec2 = $('#FechaFin').val();
+                var pag_usu = $('#dropUsuario').val(); 
+                var pag_fec1 = $('#FechaIni').val();
+                var pag_fec2 = $('#FechaFin').val();
 
                 $('#<?= $Controller; ?>').DataTable({
                     bDestroy: true,
@@ -650,7 +656,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                 $('#modal-PedidoSolo').val(pedido);
             }
 
-            function dataModalConfirmar(codigo, pago, saldo, valor, cliente, pedido, nombre, observaciones, diacobro, nuevoDiaCobro) {
+            function dataModalConfirmar(codigo, pago, saldo, valor, cliente, pedido, nombre, observaciones, diacobro) {
                 $('#modal-codigo-confirmar').val(codigo);
                 $('#modal-Pago-confirmar1').val(pago);
                 var numPago = pago.replace("$", '').replace("", '').replace(".", '').replace(",", '').trim();
@@ -660,11 +666,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                 $('#modal-Saldo-confirmar').val(saldo);
                 $('#modal-cliente-confirmar').val(cliente);
                 $('#modal-pedido-confirmar').val(pedido);
-                $('#modal-nombre-confirmar').val(nombre);
-                $('#FechaPago-actual').val("Aún no funciona");
-                $('#FechaPago-proximo').val("Aún no funciona");
-                // $('#FechaPago-actual').val(diacobro);
-                // $('#FechaPago-proximo').val(nuevoDiaCobro);
+                $('#modal-nombre-confirmar').val(nombre); 
+                $('#FechaPago-actual').val(diacobro);
+                $('#FechaPago-proximo').val(diacobro);
                 $('#Cobrador-confirmar').val("");
                 $('#FechaPago-confirmar').val("");
                 $('#ObservacionesAnt-confirmar').html(observaciones);
@@ -683,6 +687,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                 var valor = $('#modal-Valor-confirmar').val();
                 var cobrador = $('#Cobrador-confirmar').val();
                 var FechaPago = $('#FechaPago-confirmar').val();
+                var FechaPagoProximo = $('#FechaPago-proximo').val();                
                 var ObservacionesAnt = $('#ObservacionesAnt-confirmar').html();
                 var observaciones = $('#Observaciones-confirmar').val();
 
@@ -707,55 +712,64 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                         <strong>Error</strong><br />Debe Indicar cuando se recogió el pago\n\
                                     </div>');
                         } else {
-                            if (cobrador.toString().length <= 0) {
+                            if (FechaPagoProximo.toString().length <= 0) {
+                                $('#message-confirmar').html(
+                                        '<div class="alert alert-danger alert-dismissable fade in" >\n\
+                                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>\n\
+                                            <strong>Error</strong><br />Debe Indicar la próxima fecha de pago\n\
+                                        </div>');
+                            } else {
+                                if (cobrador.toString().length <= 0) {
                                 $('#message-confirmar').html(
                                         '<div class="alert alert-danger alert-dismissable fade in" >\n\
                                             <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>\n\
                                             <strong>Error</strong><br />Debe Indicar que Cobrador recogió el pago\n\
                                         </div>');
-                            } else {
-                                $('#message-confirmar').html("");
-                                var method = "<?= base_url(); ?>Pagos/ConfirmarDia/";
-                                $("body").css({
-                                    'cursor': 'wait'
-                                })
-                                $.ajax({
-                                    type: 'post',
-                                    url: method,
-                                    data: {
-                                        codigo: codigo, pedido: pedido, cliente: cliente, pago: pago, FechaPago: FechaPago, valor: valor, cobrador: cobrador, ObservacionesAnt: ObservacionesAnt, observaciones: observaciones
-                                    },
-                                    cache: false,
-                                    beforeSend: function () {
-                                        $('#message-confirmar').html("");
-                                        $('#btn-modal-confirmar').html('<i class="fa fa-check"></i> Confirmando...');
-                                    },
-                                    success: function (data) {
-                                        $('#btn-modal-confirmar').html('<i class="fa fa-check"></i> Confirmar Pago');
-                                        if (data == 1 || data == 123) {
-                                            $('#message-confirmar').html(
-                                                    '<div class="alert alert-success alert-dismissable fade in">\n\
-                                                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>\n\
-                                                        <strong>Se confirmó el pago de <b>' + pago + '</b></strong>\n\
-                                                    </div>');
+                                } else {
+                                    $('#message-confirmar').html("");
+                                    var method = "<?= base_url(); ?>Pagos/ConfirmarDia/";
+                                    $("body").css({
+                                        'cursor': 'wait'
+                                    })
+                                    $.ajax({
+                                        type: 'post',
+                                        url: method,
+                                        data: {
+                                            codigo: codigo, pedido: pedido, cliente: cliente, pago: pago, FechaPago: FechaPago, FechaPagoProximo: FechaPagoProximo, valor: valor, cobrador: cobrador, ObservacionesAnt: ObservacionesAnt, observaciones: observaciones
+                                        },
+                                        cache: false,
+                                        beforeSend: function () {
+                                            $('#message-confirmar').html("");
+                                            $('#btn-modal-confirmar').html('<i class="fa fa-check"></i> Confirmando...');
+                                        },
+                                        success: function (data) {
+                                            $('#btn-modal-confirmar').html('<i class="fa fa-check"></i> Confirmar Pago');
+                                            console.log(data);
+                                            if (data == 1 || data == 123) {
+                                                $('#message-confirmar').html(
+                                                        '<div class="alert alert-success alert-dismissable fade in">\n\
+                                                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>\n\
+                                                            <strong>Se confirmó el pago de <b>' + pago + '</b></strong>\n\
+                                                        </div>');
 
-                                            $('#btn-modal-cerrar-confirmar').click();
-                                            $('#btn-FiltrarPagos').click();
-                                        } else {
-                                            $('#message-confirmar').html(
-                                                    '<div class="alert alert-danger alert-dismissable fade in">\n\
-                                                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>\n\
-                                                        <strong>Error</strong><br />' + data + '\n\
-                                                    </div>');
+                                                $('#btn-modal-cerrar-confirmar').click();
+                                                $('#btn-FiltrarPagos').click();
+                                            } else {
+                                                $('#message-confirmar').html(
+                                                        '<div class="alert alert-danger alert-dismissable fade in">\n\
+                                                            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>\n\
+                                                            <strong>Error</strong><br />' + data + '\n\
+                                                        </div>');
+                                            }
                                         }
-                                    }
 
-                                });
-                                $("body").css({
-                                    'cursor': 'Default'
-                                })
+                                    });
+                                    $("body").css({
+                                        'cursor': 'Default'
+                                    })
 
-                                return false;
+                                    return false;
+                                }
                             }
                         }
                     }

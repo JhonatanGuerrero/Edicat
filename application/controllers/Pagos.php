@@ -578,6 +578,8 @@ class Pagos extends CI_Controller {
                                 $datosPagos[$i] = $dataPagosP;
                             }
                         }
+                        
+                        $proximoPago = $this->getNextDayPay($dataPedido[0]["DiaCobro"]);
 
                         $data = new stdClass();
                         $data->Controller = "Pagos";
@@ -587,6 +589,7 @@ class Pagos extends CI_Controller {
                         $data->cliente = $dataPedido[0]["Cliente"];
                         $data->pedido = $dataPedido[0]["CodPedido"];
                         $data->valor = $dataPedido[0]["Valor1"];
+                        $data->proximoPago = $proximoPago;
                         $data->codigo = $pagoProgramado;
                         $data->ListaDatos = $dataPedido;
                         $data->ListaDatos2 = $dataClientes;
@@ -621,13 +624,15 @@ class Pagos extends CI_Controller {
         $pag_pag = trim($this->input->post('pag_pag'));
         $pag_fec = trim($this->input->post('pag_fec') . " 00:00:00");
         $pag_fec = preg_replace('#(\d{2})/(\d{2})/(\d{4})\s(.*)#', '$3-$2-$1 $4', $pag_fec);
+        $pag_fec_pro = trim($this->input->post('pag_fec_pro') . " 00:00:00");
+        $pag_fec_pro = preg_replace('#(\d{2})/(\d{2})/(\d{4})\s(.*)#', '$3-$2-$1 $4', $pag_fec_pro);
         $pag_pro = trim($this->input->post('pag_pro'));
         $pag_cob = trim($this->input->post('pag_cob'));
         $pag_tot = trim($this->input->post('pag_tot'));
         $pag_obs = trim($this->input->post('pag_obs'));
         $pag_obsAnt = trim($this->input->post('pag_obsAnt'));
 
-        $this->conf($pag_cli, $pag_ped, $pag_cuo, $pag_pag, $pag_fec, $pag_pro, $pag_cob, $pag_tot, $pag_obs, $pag_obsAnt);
+        $this->conf($pag_cli, $pag_ped, $pag_cuo, $pag_pag, $pag_fec, $pag_pro, $pag_fec_pro, $pag_cob, $pag_tot, $pag_obs, $pag_obsAnt);
     }
 
     public function ConfirmarDia() {
@@ -640,6 +645,8 @@ class Pagos extends CI_Controller {
         $pag_pag = str_replace($no_money, "", $pag_pag);
         $pag_fec = trim($this->input->post('FechaPago') . " 00:00:00");
         $pag_fec = preg_replace('#(\d{2})/(\d{2})/(\d{4})\s(.*)#', '$3-$2-$1 $4', $pag_fec);
+        $pag_fec_pro = trim($this->input->post('FechaPagoProximo') . " 00:00:00");
+        $pag_fec_pro = preg_replace('#(\d{2})/(\d{2})/(\d{4})\s(.*)#', '$3-$2-$1 $4', $pag_fec_pro);
         $pag_tot = trim($this->input->post('valor'));
         $pag_cob = trim($this->input->post('cobrador'));
         $pag_obsAnt = trim($this->input->post('ObservacionesAnt'));
@@ -649,10 +656,10 @@ class Pagos extends CI_Controller {
         $cuotas = $num[0]["Cuota"];
 
         $pag_cuo = $cuotas + 1;
-        $this->conf($pag_cli, $pag_ped, $pag_cuo, $pag_pag, $pag_fec, $pag_pro, $pag_cob, $pag_tot, $pag_obs, $pag_obsAnt);
+        $this->conf($pag_cli, $pag_ped, $pag_cuo, $pag_pag, $pag_fec, $pag_pro, $pag_fec_pro, $pag_cob, $pag_tot, $pag_obs, $pag_obsAnt);
     }
 
-    public function conf($pag_cli, $pag_ped, $pag_cuo, $pag_pag, $pag_fec, $pag_pro, $pag_cob, $pag_tot, $pag_obs, $pag_obsAnt)
+    public function conf($pag_cli, $pag_ped, $pag_cuo, $pag_pag, $pag_fec, $pag_pro, $pag_fec_pro, $pag_cob, $pag_tot, $pag_obs, $pag_obsAnt)
     { 
         //Datos Auditoría
         $user = $this->session->userdata('Usuario');
@@ -693,19 +700,11 @@ class Pagos extends CI_Controller {
                             $sql = LogSave($dataPago, $modulo, $tabla, $accion, $llave);
 
                             $dataPedido = $this->Pedidos_model->obtenerPedido($pag_ped);
-                            $DiaCobro = $dataPedido[0]["DiaCobro"];
-                            $dia = date("d", strtotime($DiaCobro . "+ 1 month"));
-                            $mes = date("m", strtotime($fecha . "+ 1 month"));
-                            // Inicio Cambio
-                            $anio = date("Y", strtotime($fecha . "+ 1 month"));
-                            //$anio = date("Y", strtotime($DiaCobro));
-                            //if ($mes == "01"){
-                            //    $anio = date("Y", strtotime($DiaCobro . "+ 1 year"));
-                            //}
-                            // Fin Cambio
-                            $proximoPago = date("Y-m-d H:i:s", strtotime($anio . "-" . $mes . "-" . $dia . " 00:00:00"));
-                            $DiaCobro = date("Y-m-d H:i:s", strtotime($proximoPago));
-
+                            if ($pag_fec_pro == "" or $pag_fec_pro == NULL){
+                                $DiaCobro = $this->getNextDayPay($dataPedido[0]["DiaCobro"]);
+                            } else {
+                                $DiaCobro = $pag_fec_pro;
+                            }
 
                             $saldo = intval($dataPedido[0]["Saldo"]) - intval($pag_pag);
                             //Se Crea Historial Pago
@@ -2177,8 +2176,12 @@ class Pagos extends CI_Controller {
                     if ($item["NomEstado"] == "Programado") {
                         $saldo = intval($pedidosClientes[0]["Saldo"]) - intval($item["Cuota"]);
                         $newline = '\n';
-                        $item["Observaciones"] = str_replace("\n", $newline, $item["Observaciones"]);
-                        $btn2 = html_entity_decode("<a href='#ModalConfirmarPago' data-toggle='modal' onclick='dataModalConfirmar(\"" . $item['Codigo'] . "\", \"" . money_format("%.0n", $item["Cuota"]) . "\", \"" . money_format("%.0n", $saldo) . "\", \"" . $item["Valor"] . "\", \"" . $pedidosClientes[0]['Cliente'] . "\", \"" . $item["Pedido"] . "\", \"" . $pedidosClientes[0]['Nombre'] . "\", \"" . $item["Observaciones"] . "\");' title='Confirmar Pago'><i class='fa fa-check' aria-hidden='true' style='padding:5px;'></i></a>");
+                        $item["Observaciones"] = str_replace("\n", $newline, $item["Observaciones"]);  
+
+                        $proximoPago = $this->getNextDayPay($pedidosClientes[0]["DiaCobro"]);
+                        $proximoPago = date("d/m/Y", strtotime($proximoPago));
+                        
+                        $btn2 = html_entity_decode("<a href='#ModalConfirmarPago' data-toggle='modal' onclick='dataModalConfirmar(\"" . $item['Codigo'] . "\", \"" . money_format("%.0n", $item["Cuota"]) . "\", \"" . money_format("%.0n", $saldo) . "\", \"" . $item["Valor"] . "\", \"" . $pedidosClientes[0]['Cliente'] . "\", \"" . $item["Pedido"] . "\", \"" . $pedidosClientes[0]['Nombre'] . "\", \"" . $item["Observaciones"] . "\", \"" . $proximoPago . "\");' title='Confirmar Pago'><i class='fa fa-check' aria-hidden='true' style='padding:5px;'></i></a>");
                         $btn3 = html_entity_decode("<a href='#ModalDescartarPago' data-toggle='modal' onclick='dataModalDescartar(\"" . $item['Codigo'] . "\", \"" . $item["Pedido"] . "\", \"" . $pedidosClientes[0]['Cliente'] . "\", \"" . $pedidosClientes[0]['Nombre'] . "\", \"" . money_format("%.0n", $item["Cuota"]) . "\", \"" . money_format("%.0n", $pedidosClientes[0]["Saldo"]) . "\", \"" . $item["Valor"] . "\", \"" . $item["Observaciones"] . "\");' title='Descartar Pago'><i class='fa fa-close' aria-hidden='true' style='padding:5px;'></i></a>");
                         $f1 = strtotime($item["FechaImpresion"]);
                         $f2 = strtotime(date("d-m-Y 00:00:00", time()));
@@ -3353,6 +3356,25 @@ class Pagos extends CI_Controller {
         }
 
         return $dataPagos;
+    }
+
+    public function getNextDayPay($DiaCobro)
+    {
+        // Calcular Próxima Fecha de pago
+        $fecha = date("Y-m-d H:i:s");
+        $dia = date("d", strtotime($DiaCobro . "+ 1 month"));
+        $mes = date("m", strtotime($fecha . "+ 1 month"));
+        // Inicio Cambio
+        $anio = date("Y", strtotime($fecha . "+ 1 month"));
+        //$anio = date("Y", strtotime($DiaCobro));
+        //if ($mes == "01"){
+        //    $anio = date("Y", strtotime($DiaCobro . "+ 1 year"));
+        //}
+        // Fin Cambio
+        $proximoPago = date("Y-m-d H:i:s", strtotime($anio . "-" . $mes . "-" . $dia . " 00:00:00"));
+        $proximoPago = date("Y-m-d H:i:s", strtotime($proximoPago));
+
+        return $proximoPago;
     }
 
 }

@@ -116,7 +116,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                             </div>
                             <br /> 
                             <fieldset style="background-color: #fefefe; padding:5px; border: 1px solid #e3e3e3;">
-                                <legend>Programar Pago</legend>
+                                <legend>Confirmar Pago</legend>
                                 <form id="form-confirmarPago">
                                     <div class="col-md-4">
                                         <div class="form-group">
@@ -133,20 +133,20 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                             ?>" class="form-control" id="NuevoSaldo" name="NuevoSaldo" disabled style="background-color: #ffffff;">
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-group">
                                             <label>Programar para:</label>
                                             <input type="text" value="<?= date("d/m/Y", strtotime($dataPago[0]["FechaProgramada"])); ?>" class="form-control" id="FechaPrograma" name="FechaPrograma" disabled style="background-color: #ffffff;">
                                         </div>
                                     </div>
                                     
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-group">
                                             <label>Valor Real del Pago</label>
                                             <input type="text" value="<?= $dataPago[0]["Cuota"]; ?>" class="form-control" max="<?= $ListaDatos3[$item["CodPedido"]]["saldo"]; ?>" id="NuevoAbonoR" name="NuevoAbonoR" style="background-color: #ffffff;">
                                         </div>
                                     </div> 
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-group">
                                             <label>Cobrador:</label>
                                             <select name="Cobrador" id="Cobrador" class="form-control required">
@@ -159,10 +159,16 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-3">
                                         <div class="form-group">
                                             <label>Fecha de Pago:</label>
                                             <input type="text" value="" class="form-control datepicker8" id="FechaPago" name="FechaPago">
+                                        </div>
+                                    </div>                                    
+                                    <div class="col-md-3">
+                                        <div class="form-group">
+                                            <label>Fecha de Próximo Pago:</label>
+                                            <input type="text" value="<?= date("d/m/Y", strtotime($proximoPago)); ?>" class="form-control datepicker" id="FechaProximoPago" name="FechaProximoPago">
                                         </div>
                                     </div>
                                     <div class="col-sm-12 col-lg-6">
@@ -201,6 +207,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                         minDate: new Date(new Date().setDate(todayDate - 10)),
                         maxDate: new Date(new Date().setDate(todayDate + 10))
                     });
+                    $('.datepicker').datetimepicker({
+                        format: 'DD/MM/YYYY',
+                        locale: 'es',
+                    });
                     $('#form-confirmarPago').submit(function (e) {
                         e.preventDefault();
                         ConfirmarPago();
@@ -208,7 +218,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                     $('#btn-confirmarPago').click(function (e) {
                         e.preventDefault();
                         ConfirmarPago();
-                    });
+                    }); 
                     
                     $('#nuevasObservaciones').focus(function () {
                         var abono = $('#NuevoAbonoR').val();
@@ -236,6 +246,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                         var pag_cuo = $('#Cuota').val();
                         var pag_pag = $('#NuevoAbonoR').val().replace("$", "").replace(" ", "").replace(".", "");
                         var pag_fec = $('#FechaPago').val();
+                        var pag_fec_pro = $('#FechaProximoPago').val();
                         var pag_pro = <?= $codigo; ?>;
                         var pag_cob = $('#Cobrador').val();
                         var pag_tot = <?= $valor; ?>;
@@ -269,7 +280,14 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                                     <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>\n\
                                                     <strong>Error</strong><br />La fecha del Pago no puede ir vacía\n\
                                                 </div>');
-                                    } else {
+                                    } else {                                        
+                                        if (pag_fec_pro.toString().length <= 0) {
+                                            $('#message').html(
+                                                    '<div class="alert alert-danger alert-dismissable fade in" >\n\
+                                                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>\n\
+                                                        <strong>Error</strong><br />La fecha del Próximo Pago no puede ir vacía\n\
+                                                    </div>');
+                                        } else {
                                         if (pag_cob.toString().length <= 0) {
                                             $('#message').html(
                                                     '<div class="alert alert-danger alert-dismissable fade in" >\n\
@@ -293,7 +311,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                                     type: 'post',
                                                     url: method,
                                                     data: {
-                                                        pag_cli: pag_cli, pag_ped: pag_ped, pag_cuo: pag_cuo, pag_pag: pag_pag, pag_cob: pag_cob, pag_fec: pag_fec, pag_pro: pag_pro, pag_tot: pag_tot, pag_obs: pag_obs, pag_obsAnt: pag_obsAnt
+                                                        pag_cli: pag_cli, pag_ped: pag_ped, pag_cuo: pag_cuo, pag_pag: pag_pag, pag_cob: pag_cob, pag_fec: pag_fec, pag_pro: pag_pro, pag_fec_pro: pag_fec_pro, pag_tot: pag_tot, pag_obs: pag_obs, pag_obsAnt: pag_obsAnt
                                                     },
                                                     cache: false,
                                                     beforeSend: function () {
@@ -335,6 +353,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                             }
                                         }
                                     }
+                                }
                                 }
                             }
                         }
