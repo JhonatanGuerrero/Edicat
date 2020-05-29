@@ -20,7 +20,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
             </form>
         </div>
     </div>
-    <p class="pull-right">Desarrollado para Ediciones Católicas - 2018 &#174;</p>
+    <p class="pull-right">Desarrollado para Ediciones Católicas - <?= date("Y"); ?></p>
 <!--    <p><a href="#">¿Olvidó su Contraseña?</a></p>-->
     <br>
     <div class="row">

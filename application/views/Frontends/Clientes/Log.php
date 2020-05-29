@@ -41,7 +41,18 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                         <td><?= $item["Usuario"]; ?></td>
                                         <td class="text-center">
                                             <div class="btn-group">
+                                            <?php
+                                            $idPermiso = 110;
+                                            $btn = validarPermisoBoton($idPermiso);
+                                            if ($btn) {
+                                            ?>
                                                 <a href="<?= base_url() . "Clientes/VerLog/" . $item["Codigo"] . "/"; ?>" title="Ver Registro"><i class="fa fa-eye" aria-hidden="true" style="padding:5px;"></i></a>                                                
+                                            <?php 
+                                            } else {
+                                                ?>
+                                                Sin Permisos
+                                                <?php
+                                            } ?>
                                             </div>                                        
                                         </td>
                                     </tr>
@@ -58,6 +69,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                     lengthMenu: [ 25, 50, 100, -1 ],
                     responsive: true,
                     scrollX: true,
+                    order: [[ 2, "desc" ]],
                     language: {
                         url: "<?= base_url('Public/assets/'); ?>/lib/Datetables.js/Spanish.json"
                     }

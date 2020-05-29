@@ -35,7 +35,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                     $menu = validarPermisoMenu($idPermiso);
                     if ($menu) {
                         ?>
-                        <li><a href="<?= base_url(); ?>Pagos/Morosos/"><span class="fa fa-thumbs-o-down"></span>&nbsp; Morosos</a></li>
+                        <!-- <li><a href="<?= base_url(); ?>Pagos/Morosos/"><span class="fa fa-thumbs-o-down"></span>&nbsp; Morosos</a></li> -->
                         <?php
                     }
                     ?>
@@ -44,7 +44,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                     $menu = validarPermisoMenu($idPermiso);
                     if ($menu) {
                         ?>
-                        <li><a href="<?= base_url(); ?>Pagos/Datacredito/"><span class="fa fa-balance-scale"></span>&nbsp; Datacrédito</a></li>
+                        <!-- <li><a href="<?= base_url(); ?>Pagos/Datacredito/"><span class="fa fa-balance-scale"></span>&nbsp; Datacrédito</a></li> -->
                         <?php
                     }
                     ?>

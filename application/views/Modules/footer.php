@@ -3,7 +3,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 ?>
                 <footer style="padding-bottom: 10px; background-color: #fff;">
                     <hr>
-                    <p class="pull-right">Desarrollado para Ediciones Católicas - 2018</p>
+                    <p class="pull-right">Desarrollado para Ediciones Católicas - <?= date("Y"); ?></p>
                 </footer>
             </div>
         </div>

@@ -46,7 +46,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                             </thead>
                             <tbody>
                                 <?php
-                                if (count($ListaDatos) > 0 && $ListaDatos != false) {
+                                if ($ListaDatos != false && count($ListaDatos) > 0) {
                                     //var_dump($ListaDatos);
                                     foreach ($ListaDatos as $item) {
                                         ?>

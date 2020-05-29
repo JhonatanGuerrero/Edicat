@@ -145,7 +145,7 @@ class Permisos extends CI_Controller {
                             <div class="form-check">
                                 <input class="form-check-input checkboxPermisos" type="checkbox" value="' . $codigo . '" id="permiso_' . $codigo . '" ' . $habilitado . '>
                                 <label class="form-check-label" for="permiso_' . $codigo . '">
-                                    ' . $TipoPermiso.": ".$nombre . '
+                                    ' . $codigo . '. '. $TipoPermiso.": ".$nombre . '
                                 </label>
                             </div>
                         </div>';

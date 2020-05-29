@@ -60,6 +60,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                     lengthMenu: [ 25, 50, 100, -1 ],
                     responsive: true,
                     scrollX: true,
+                    order: [[ 4, "desc" ]],
                     language: {
                         url: "<?= base_url('Public/assets/'); ?>/lib/Datetables.js/Spanish.json"
                     }

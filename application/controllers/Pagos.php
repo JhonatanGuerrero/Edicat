@@ -1701,14 +1701,14 @@ class Pagos extends CI_Controller {
         } else {
             $this->session->set_flashdata("msg", "No hay Clientes Morosos");
         }
-
+ 
         if (count($dataPedidos) <= 0) {
             if ($PerfilId >= 102) {
                 $this->session->set_flashdata("error", "Usted no tiene Clientes Asociados como Morosos.");
             } else {
                 $this->session->set_flashdata("error", "No hay Clientes Morosos");
             }
-        }
+        }       
         $data = new stdClass();
         $data->Controller = "Clientes";
         $data->title = "Clientes Morosos";

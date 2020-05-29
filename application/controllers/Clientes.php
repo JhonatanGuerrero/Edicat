@@ -67,6 +67,8 @@ class Clientes extends CI_Controller {
                             $cuotas = $cuotas[0]["Cuotas"];
                         }
                         $dataCliente[$i]["Cuotas"] = $cuotas;
+                    } else {
+                        unset($dataCliente[$i]);
                     }
                 } else {
                     unset($dataCliente[$i]);
@@ -127,8 +129,8 @@ class Clientes extends CI_Controller {
     public function Buscar() {
         $idPermiso = 11;
         $page = validarPermisoPagina($idPermiso);
-
-        $dataEstados = $this->Estados_model->obtenerEstadosPor(102);
+        
+        $dataEstados = $this->Estados_model->obtenerEstadosPor(102); 
         $dataCobradores = $this->Cobradores_model->obtenerCobradores();
         if (isset($dataCobradores) && $dataCobradores != FALSE) {
             $data = new stdClass();
@@ -208,9 +210,12 @@ class Clientes extends CI_Controller {
         $permisos["Pagos"] = validarPermisoAcciones($idPermiso);  
         //Devolución del Cliente
         $idPermiso = 90;
-        $permisos["Devolucion"] = validarPermisoAcciones($idPermiso);  
-        //Ver solo Clientes Propios
-        $idPermiso = 103;
+        $permisos["Devolucion"] = validarPermisoAcciones($idPermiso);
+        //Ver Log del Cliente
+        $idPermiso = 26;
+        $permisos["LogCliente"] = validarPermisoAcciones($idPermiso);  
+        //Ver TODOS los Clientes (Si es falso, solo los propios)
+        $idPermiso = 101;
         $permisos["TodosClientes"] = validarPermisoAcciones($idPermiso);  
             
         return $permisos;
@@ -224,6 +229,7 @@ class Clientes extends CI_Controller {
         $btn4 = "";
         $btn5 = "";
         $btn6 = "";
+        $btn7 = "";
         $btnOpciones = "Sin permisos";
 
         $direccion = $item["Dir"];
@@ -247,16 +253,16 @@ class Clientes extends CI_Controller {
         $dataPedidos = $this->Pedidos_model->obtenerPedidosDeben();
         $dataCobradores = $this->Cobradores_model->obtenerCobradores();
         $dataUserCliente = true;
-         
+        
         if (!$permisos["TodosClientes"]) 
             $dataUserCliente = $this->Clientes_model->ClienteUsuarioBool($item['Cliente'], $usuario); 
         else
             $dataUserCliente = true;
- 
+          
         if ($permisos["Consultar"])
             $btn1 = "<a href='" . base_url() . "Clientes/Consultar/" . $item['Cliente'] . "/' target='_blank' title='Consultar Cliente'><i class='fa fa-search' aria-hidden='true' style='padding:5px;'></i></a>";
         
-        $dataUserCliente = true;
+        // $dataUserCliente = true; //Seguro para que muestre las opciones en todos los clientes
         if ($dataUserCliente) { 
             if ($permisos["CambioFecha"])
                 $btn2 = "<a href='" . base_url() . "Clientes/CambioFecha/" . $item['Cliente'] . "/' target='_blank' title='Cambio de Fecha de Cobro'><i class='fa fa-calendar' aria-hidden='true' style='padding:5px;'></i></a>";
@@ -268,6 +274,8 @@ class Clientes extends CI_Controller {
                 $btn5 = "<a href='" . base_url() . "Clientes/Pagos/" . $item['Cliente'] . "/' target='_blank' title='Pagos Realizados del Cliente'><i class='fa fa-usd' aria-hidden='true' style='padding:5px;'></i></a>";
             if ($permisos["Devolucion"])
                 $btn6 = "<a href='#ModalDevol' data-toggle='modal' title='Devolución del Cliente' onclick='DatosModal(\"" . $item['Pedido'] . "\", \"" . $item['Cliente'] . "\", \"" . $item['Nombre'] . "\", \"" . $item['Saldo'] . "\", \"" . $cuota . "\");'><i class='fa fa-reply-all' aria-hidden='true' style='padding:5px;'></i></a>";
+            if ($permisos["LogCliente"])
+                $btn7 = "<a href='" . base_url() . "Clientes/Log/" . $item['Cliente'] . "/' target='_blank' title='Registros del Cliente'><i class='fa fa-list-alt' aria-hidden='true' style='padding:5px;'></i></a>";
         }    
 
         $diacobro = "";
@@ -277,8 +285,8 @@ class Clientes extends CI_Controller {
             $diacobro = "Sin Fecha";
         }
  
-        if (trim($btn1) != "" or trim($btn2) != "" or trim($btn3) != "" or trim($btn4) != "" or trim($btn5) != "" or trim($btn6) != "") { 
-            $btnOpciones = $btn1 . $btn2 . $btn3 . $btn4 . $btn5 . $btn6;
+        if (trim($btn1) != "" or trim($btn2) != "" or trim($btn3) != "" or trim($btn4) != "" or trim($btn5) != "" or trim($btn6) != "" or trim($btn7) != "") { 
+            $btnOpciones = $btn1 . $btn2 . $btn3 . $btn4 . $btn5 . $btn6 . $btn7;
         } 
 
         $arreglo = array(
@@ -1539,7 +1547,10 @@ class Clientes extends CI_Controller {
         }
     }
 
-    public function Log($cliente) {
+    public function Log($cliente) {        
+        $idPermiso = 26;
+        $page = validarPermisoPagina($idPermiso);
+
         if ($cliente == null || $cliente == "") {
             $this->session->set_flashdata("error", "No se encontró Cliente.");
             redirect(base_url("/Clientes/Admin/"));
@@ -1567,6 +1578,9 @@ class Clientes extends CI_Controller {
     }
 
     public function VerLog($codigo) {
+        $idPermiso = 110;
+        $page = validarPermisoPagina($idPermiso);
+
         $dataLog = $this->Log_model->obtenerLogPorCod($codigo);
         if (isset($dataLog) && $dataLog != FALSE) {
             $data = new stdClass();
@@ -1861,6 +1875,9 @@ class Clientes extends CI_Controller {
     }
 
     public function Asignados() {
+        $idPermiso = 108;
+        $page = validarPermisoPagina($idPermiso);
+
         $dataCliente = $this->Clientes_model->obtenerClientesAsignados();
         $dataEstados = $this->Estados_model->obtenerEstadosPor(102);
         $dataUsuarios = $this->Usuarios_model->obtenerUsuariosEP();

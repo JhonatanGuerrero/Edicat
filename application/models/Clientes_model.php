@@ -262,9 +262,11 @@ class Clientes_model extends CI_Model {
     }
 
     public function LogCliente($cliente) {
-        $this->db->like('Modulo', 'Cliente');
-        $this->db->where('Llave', $cliente);
+        $where = "(Tabla = 'Clientes' OR Tabla = 'Referencias' OR Tabla = 'ReferenciasCliente' OR Tabla = 'Direcciones' OR Tabla = 'Eventos' OR Tabla = 'Pedidos' OR Tabla = 'ProductosPedidos' ) AND Llave = " . $cliente;
+        $this->db->where($where);
+        $this->db->order_by('Codigo', 'DESC');
         $query = $this->db->get("Log");
+        // echo $this->db->last_query()."<br><br>";
         if ($query->num_rows() <= 0) {
             return false;
         } else {
