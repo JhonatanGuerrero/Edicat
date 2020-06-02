@@ -67,7 +67,8 @@ class Clientes_model extends CI_Model {
         if ($usuario != "") {
             $where = "c.Habilitado = 1 AND c.Nombre LIKE '%" . $nombre . "%' AND c.estado LIKE '%" . $estado . "%' AND u.Codigo = '" . $usuario . "'";
         } 
-
+        
+        $this->db->distinct();
         $this->db->select('c.*, e.Nombre as EstNombre, d.Direccion as Dir, d.Etapa, d.Torre, d.Apartamento, d.Manzana, d.Interior, d.Casa, d.Barrio, p.Codigo as Pedido, p.*, u.Usuario as UsuAsign, u.Nombre as NombreUsuAsign');
         $this->db->from('Clientes as c');
         $this->db->join('Pedidos as p', 'p.Cliente = c.Codigo');

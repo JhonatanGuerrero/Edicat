@@ -151,7 +151,7 @@ class Clientes extends CI_Controller {
     public function SearchJsonAsignado() {
         $nombre = ucwords(strtolower(trim($this->input->post('nombre'))));
         $estado = trim($this->input->post('estado'));
-        $usuario = "100";// trim($this->input->post('usuario')); 
+        $usuario = trim($this->input->post('usuario')); 
 
         $data = $this->Clientes_model->searchClienteAsignado($nombre, $estado, $usuario);
         $arreglo["data"] = [];

@@ -73,7 +73,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                     <div class="form-group">
                                         <label for="selectEstados">Estado:</label>
                                         <select name="selectEstados" id="selectEstados" class="form-control">
-                                            <option value=""></option>
+                                            <option value="">Todos los estados</option>
                                             <?php
                                             if ($Lista1 != false) {
                                                 foreach ($Lista1 as $value) {
@@ -88,14 +88,20 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                                     <div class="form-group">
                                         <label for="selectUsuarios">Usuario:</label>
                                         <select name="selectUsuarios" id="selectUsuarios" class="form-control">
-                                            <option value=""></option>
                                             <?php
-                                            if ($Lista2 != false) {
-                                                foreach ($Lista2 as $value) {
-                                                    echo "<option value='" . $value["Codigo"] . "'>" . $value["Nombre"] . "</option>";
+                                                $idPermiso = 101;
+                                                $accion = validarPermisoAcciones($idPermiso);
+                                                if ($accion) {
+                                                    echo '<option value="">Todos los usuarios</option>'; 
+                                                    if ($Lista2 != false) {
+                                                        foreach ($Lista2 as $value) {
+                                                            echo "<option value='" . $value["Codigo"] . "'>" . $value["Nombre"] . "</option>";
+                                                        }
+                                                    }
+                                                } else {
+                                                    echo '<option value="' . $user = $this->session->userdata('Codigo') . '">' . $user = $this->session->userdata('Usuario') . '</option>'; 
                                                 }
-                                            }
-                                            ?>
+                                            ?> 
                                         </select>
                                     </div>
                                 </div>

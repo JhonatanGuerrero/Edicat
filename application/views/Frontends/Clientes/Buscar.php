@@ -115,7 +115,7 @@ defined('BASEPATH') or exit('No direct script access allowed');
                                         <div class="form-group">
                                             <label for="selectEstados">Estado:</label>
                                             <select name="selectEstados" id="selectEstados" class="form-control" <?php if (!$btn) { ?> disabled <?php } ?>>
-                                                <option value=""></option>
+                                                <option value="">Todos los estados</option>
                                                 <?php
                                                     if ($Lista1 != false) {
                                                         foreach ($Lista1 as $value) {
