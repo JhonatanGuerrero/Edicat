@@ -31,13 +31,13 @@ defined('BASEPATH') OR exit('No direct script access allowed');
                     <div class="col-md-12">
                         <div class="btn-toolbar list-toolbar">
                             <?php
-                            $idPermiso = 88;
+                            /*$idPermiso = 88;
                             $accion = validarPermisoAcciones($idPermiso);
                             if ($accion) {
                                 ?>
                                 <a href="<?= base_url() . "Clientes/Crear/" ?>" class="btn btn-primary"><i class="fa fa-plus"></i> Nuevo Cliente/Pedido</a>
                                 <?php
-                            }
+                            }*/
                             $idPermiso = 89;
                             $accion = validarPermisoAcciones($idPermiso);
                             if ($accion) {

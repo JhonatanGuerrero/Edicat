@@ -22,6 +22,15 @@ defined('BASEPATH') OR exit('No direct script access allowed');
             <li>
                 <ul class="dashboard-client nav nav-list collapse">
                     <?php
+                    $idPermiso = 111;
+                    $menu = validarPermisoMenu($idPermiso);
+                    if ($menu) {
+                        ?>
+                        <li><a href="<?= base_url(); ?>Clientes/Crear/"><span class="fa fa-plus"></span>&nbsp; Nuevo Cliente</a></li>
+                        <?php
+                    }
+                    ?>
+                    <?php
                     $idPermiso = 64;
                     $menu = validarPermisoMenu($idPermiso);
                     if ($menu) {
